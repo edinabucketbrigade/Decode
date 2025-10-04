@@ -16,19 +16,19 @@ import dev.nextftc.hardware.driving.DriverControlledCommand;
 @TeleOp(name="Test Name", group="Linear OpMode")
 
     public class TeleOpProgram extends NextFTCOpMode {
-        public TeleOpProgram() {
-            addComponents(
-                    BulkReadComponent.INSTANCE,
-                    BindingsComponent.INSTANCE,
-                    new PedroComponent(Constants::createFollower)
-            );
-        }
+
     @Override public void onInit() {
+        addComponents(
+                BulkReadComponent.INSTANCE,
+                BindingsComponent.INSTANCE,
+                new PedroComponent(Constants::createFollower)
+        );
         DriverControlledCommand driverControlled = new PedroDriverControlled(
             Gamepads.gamepad1().leftStickY(),
             Gamepads.gamepad1().leftStickX(),
             Gamepads.gamepad1().rightStickX(),
             true
         );
-        driverControlled.schedule();}
+        driverControlled.schedule();
+    }
     }
