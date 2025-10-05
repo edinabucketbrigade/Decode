@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+import dev.nextftc.core.commands.CommandManager;
 import dev.nextftc.core.components.BindingsComponent;
 import dev.nextftc.core.components.SubsystemComponent;
 import dev.nextftc.extensions.pedro.PedroComponent;
@@ -14,16 +15,14 @@ import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.driving.DriverControlledCommand;
 
 @TeleOp(name="Test Name", group="Linear OpMode")
-
-    public class TeleOpProgram extends NextFTCOpMode {
-        public TeleOpProgram() {
-            addComponents(
-                    BulkReadComponent.INSTANCE,
-                    BindingsComponent.INSTANCE,
-                    new PedroComponent(Constants::createFollower)
-            );
-        }
+public class TeleOpProgram extends NextFTCOpMode {
     @Override public void onInit() {
+        addComponents(new PedroComponent(Constants::createFollower),
+                BulkReadComponent.INSTANCE,
+                BindingsComponent.INSTANCE,
+                CommandManager.INSTANCE
+
+        );
         DriverControlledCommand driverControlled = new PedroDriverControlled(
             Gamepads.gamepad1().leftStickY(),
             Gamepads.gamepad1().leftStickX(),
@@ -31,4 +30,4 @@ import dev.nextftc.hardware.driving.DriverControlledCommand;
             true
         );
         driverControlled.schedule();}
-    }
+}
