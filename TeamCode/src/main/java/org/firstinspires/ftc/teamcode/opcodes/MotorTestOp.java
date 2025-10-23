@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.button.Trigger;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
@@ -32,7 +33,7 @@ public class MotorTestOp extends CommandOpMode {
 
     @Override
     public void initialize() {
-        //follower = Constants.createFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
         super.reset();
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         runtime = new ElapsedTime();
@@ -50,20 +51,19 @@ public class MotorTestOp extends CommandOpMode {
         hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
 
         toolOp = new GamepadEx(gamepad1);
-/*        toolOp.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).
+        toolOp.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).
                 whenPressed(robot.enableIntakeCommand()).
                 whenReleased(robot.disableIntakeCommand());
 
         toolOp.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).
                 whenPressed(robot.enableShooterCommand()).
                 whenReleased(robot.disableShooterCommand());
-
         toolOp.getGamepadButton(GamepadKeys.Button.A).
                 whenPressed(robot.shootLeftCommand());
 
         toolOp.getGamepadButton(GamepadKeys.Button.B).
                 whenPressed(robot.shootRightCommand());
-*/
+
         //setup base Telemetry
 
         telemetryM.update();
@@ -81,17 +81,20 @@ public class MotorTestOp extends CommandOpMode {
 
         robot.run();
 
-        if (toolOp.isDown(GamepadKeys.Button.LEFT_BUMPER)) robot.enableIntake();
-        else robot.disableIntake();
-        if (toolOp.isDown(GamepadKeys.Button.RIGHT_BUMPER)) robot.enableShooter();
-        else robot.disableShooter();
+     //   if (toolOp.isDown(GamepadKeys.Button.LEFT_BUMPER)) robot.enableIntake();
+     //   else robot.disableIntake();
+     //   if (toolOp.isDown(GamepadKeys.Button.RIGHT_BUMPER)) robot.enableShooter();
+     //   else robot.disableShooter();
 
-        if (toolOp.isDown(GamepadKeys.Button.A)) robot.shootLeft();
+     /*   if (toolOp.isDown(GamepadKeys.Button.A)) robot.shootLeft();
         if (toolOp.isDown(GamepadKeys.Button.B)) robot.shootRight();
 
         if (toolOp.isDown(GamepadKeys.Button.X)) robot.setLeft();
-        if (toolOp.isDown(GamepadKeys.Button.Y)) robot.setRight();
+        else robot.resetLeft();
 
+        if (toolOp.isDown(GamepadKeys.Button.Y)) robot.setRight();
+        else robot.resetRight();
+*/
         follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
         //telemetryM.debug("position", follower.getPose());
         telemetryM.debug("Elapsed time", runtime);
