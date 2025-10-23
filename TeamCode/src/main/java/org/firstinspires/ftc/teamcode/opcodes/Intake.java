@@ -20,8 +20,7 @@ public class Intake extends SubsystemBase {
 
         flywheel = new Motor(hardwareMap, "flywheel_Main", Motor.GoBILDA.BARE);
         flywheel.setRunMode(Motor.RunMode.VelocityControl);
-        flywheel.setVeloCoefficients(kP, 0, 0);
-        flywheel.setFeedforwardCoefficients(0, kV);
+        flywheel.setVeloCoefficients(kP, kV, 0);
         isRunning = false;
     }
 

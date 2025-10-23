@@ -17,8 +17,7 @@ public class Outake extends SubsystemBase {
         public static double kP = 20;
         public static double kV = 0.7;
         public static double speed = 6000.0;
-        int a;
-        int b;
+
 
         public boolean isRunning;
 
@@ -26,11 +25,11 @@ public class Outake extends SubsystemBase {
 
             flywheel = new MotorEx(hardwareMap, "flywheel_Main", Motor.GoBILDA.BARE);
             flywheel.setRunMode(Motor.RunMode.VelocityControl);
-            flywheel.setVeloCoefficients(kP, 0, 0);
-            flywheel.setFeedforwardCoefficients(0, kV);
+            flywheel.setVeloCoefficients(kP, kV, 0);
             isRunning = false;
-            triggerL = new SimpleServo(hardwareMap,"Servo_Left", a, b);
-            triggerR = new ServoEx(hardwareMap, "Servo_Right", a, b);
+
+            triggerL = new ServoEx(hardwareMap,"Servo_Left", 0,1);
+            triggerR = new ServoEx(hardwareMap, "Servo_Right", 0, 1);
 
         }
 
@@ -42,11 +41,6 @@ public class Outake extends SubsystemBase {
         }
         @Override
         public void periodic() {
-            if (triggerL.getPosition()<1) {
-                triggerL.set(1);
-            }else {
-                triggerL.set(0);
-            }
         }
         public void StopOutake() {
 
@@ -64,4 +58,3 @@ public class Outake extends SubsystemBase {
             }
         }
     }
-
