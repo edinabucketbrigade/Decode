@@ -9,6 +9,8 @@ import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.sun.source.tree.IfTree;
 
+import java.util.Set;
+
 @Configurable
 public class Outake extends SubsystemBase {
         private MotorEx flywheel;
@@ -18,7 +20,8 @@ public class Outake extends SubsystemBase {
         public static double kV = 0.7;
         public static double speed = 6000.0;
 
-
+        public static double resetPosition = .4;
+        public static double triggerPosition = .6;
         public boolean isRunning;
 
         public Outake(HardwareMap hardwareMap) {
@@ -30,13 +33,12 @@ public class Outake extends SubsystemBase {
 
             triggerL = new ServoEx(hardwareMap,"Servo_Left", 0,1);
             triggerR = new ServoEx(hardwareMap, "Servo_Right", 0, 1);
-
+            triggerR.setInverted(true);
         }
 
         public void StartOutake() {
 
             flywheel.set(speed);
-
 
         }
         @Override
@@ -47,7 +49,14 @@ public class Outake extends SubsystemBase {
             flywheel.set(0);
         }
 
-        public void ToggleOutake() {
+        pubilc void SettriggerL(double position){
+            triggerL.set(position);
+        }
+        public void SettriggerR(double position){
+            triggerR.set(position);
+        }
+
+    public void ToggleOutake() {
             if (!isRunning) {
                 isRunning = true;
                 StartOutake();
@@ -58,3 +67,7 @@ public class Outake extends SubsystemBase {
             }
         }
     }
+
+)
+
+
