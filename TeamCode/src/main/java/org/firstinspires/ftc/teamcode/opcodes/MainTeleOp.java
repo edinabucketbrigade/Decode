@@ -1,9 +1,6 @@
 package org.firstinspires.ftc.teamcode.opcodes;
 
 
-import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.A;
-import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.B;
-import static com.seattlesolvers.solverslib.gamepad.GamepadKeys.Button.LEFT_BUMPER;
 
 import com.pedropathing.follower.Follower;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
@@ -36,26 +33,33 @@ public class MainTeleOp extends CommandOpMode {
         follower.startTeleopDrive();
         intake = new Intake(hardwareMap);
         outake = new Outake(hardwareMap);
-        controller.getGamepadButton(A).whenPressed(
+        // A triggers and resets left servo
+        controller.getGamepadButton(GamepadKeys.Button.A).whenPressed(
 
                 new SequentialCommandGroup(
                         new InstantCommand(() -> outake.SettriggerL(Outake.triggerPosition)),
                         new WaitCommand(100),
                         new InstantCommand(() -> outake.SettriggerL(Outake.resetPosition))
                 ));
-        controller.getGamepadButton(B).whenPressed(
+        // B triggers and resets right servo
+        controller.getGamepadButton(GamepadKeys.Button.B).whenPressed(
 
-        new SequentialCommandGroup(
-                new InstantCommand(() -> outake.SettriggerR(Outake.triggerPosition)),
-                new WaitCommand(100),
-                new InstantCommand(() -> outake.SettriggerR(Outake.resetPosition))
-        ));
+            new SequentialCommandGroup(
+                    new InstantCommand(() -> outake.SettriggerR(Outake.triggerPosition)),
+                    new WaitCommand(100),
+                    new InstantCommand(() -> outake.SettriggerR(Outake.resetPosition))
+            ));
 
-        controller.getGamepadButton(LEFT_BUMPER).whenPressed(InstantCommand(() -> outake.StartOutake()))
-                .whenReleased(InstantCommand(() -> outake.StopOutake()));
+        // LEFT_BUMPER controlls the start and stop of the outake
+        controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
+                .whenPressed(new InstantCommand(() -> outake.StartOutake()))
+                .whenReleased(new InstantCommand(() -> outake.StopOutake()));
+        // RIGHT_BUMPER controlls the start and stop of the intake
+        controller.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+                .whenPressed(new InstantCommand(() -> intake.StartIntake()))
+                .whenReleased(new InstantCommand(() -> intake.StopIntake()));
 
     }
-
 
     @Override
     public void run() {
@@ -63,10 +67,5 @@ public class MainTeleOp extends CommandOpMode {
         follower.update();
 
         follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
-
-        if (lB.wasJustPressed()){
-            intake.ToggleIntake();
-        }
-
     }
 }

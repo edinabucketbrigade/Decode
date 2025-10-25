@@ -18,7 +18,7 @@ public class Intake extends SubsystemBase {
     public boolean isRunning;
     public Intake(HardwareMap hardwareMap) {
 
-        flywheel = new Motor(hardwareMap, "flywheel_Main", Motor.GoBILDA.BARE);
+        flywheel = new Motor(hardwareMap, "flywheel_intake", Motor.GoBILDA.BARE);
         flywheel.setRunMode(Motor.RunMode.VelocityControl);
         flywheel.setVeloCoefficients(kP, kV, 0);
         isRunning = false;
