@@ -52,12 +52,10 @@ public class MainTeleOp extends CommandOpMode {
 
         // LEFT_BUMPER controlls the start and stop of the outake
         controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
-                .whenPressed(new InstantCommand(() -> outake.StartOutake()))
-                .whenReleased(new InstantCommand(() -> outake.StopOutake()));
+                .whenPressed(new InstantCommand(() -> outake.ToggleOutake()));
         // RIGHT_BUMPER controlls the start and stop of the intake
         controller.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
-                .whenPressed(new InstantCommand(() -> intake.StartIntake()))
-                .whenReleased(new InstantCommand(() -> intake.StopIntake()));
+                .whenPressed(new InstantCommand(() -> intake.ToggleIntake()));
 
     }
 
