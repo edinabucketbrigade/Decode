@@ -2,7 +2,11 @@ package org.firstinspires.ftc.teamcode.opcodes;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.seattlesolvers.solverslib.command.CommandBase;
+import com.seattlesolvers.solverslib.command.InstantCommand;
+import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
+import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.hardware.ServoEx;
 import com.seattlesolvers.solverslib.hardware.SimpleServo;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
@@ -59,7 +63,21 @@ public class Outake extends SubsystemBase {
         public void SettriggerR(double position){
             triggerR.set(position);
         }
+        public CommandBase shootL(){
+           return new SequentialCommandGroup(
+                    new InstantCommand(() -> SettriggerL(triggerPosition)),
+                    new WaitCommand(100),
+                    new InstantCommand(() -> SettriggerL(resetPosition))
+            );
 
+        }
+        public CommandBase shootR() {
+            return new SequentialCommandGroup(
+                    new InstantCommand(() -> SettriggerR(triggerPosition)),
+                    new WaitCommand(100),
+                    new InstantCommand(() -> SettriggerR(resetPosition))
+            );
+        }
     public void ToggleOutake() {
             if (!isRunning) {
                 isRunning = true;

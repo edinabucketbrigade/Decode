@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.opcodes;
 
 
 
+import android.hardware.TriggerEventListener;
+
 import com.pedropathing.follower.Follower;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -12,6 +14,7 @@ import com.seattlesolvers.solverslib.command.button.GamepadButton;
 import com.seattlesolvers.solverslib.gamepad.ButtonReader;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
+import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -35,20 +38,13 @@ public class MainTeleOp extends CommandOpMode {
         outake = new Outake(hardwareMap);
         // A triggers and resets left servo
         controller.getGamepadButton(GamepadKeys.Button.A).whenPressed(
-
-                new SequentialCommandGroup(
-                        new InstantCommand(() -> outake.SettriggerL(Outake.triggerPosition)),
-                        new WaitCommand(100),
-                        new InstantCommand(() -> outake.SettriggerL(Outake.resetPosition))
-                ));
+                outake.shootL()
+        );
         // B triggers and resets right servo
         controller.getGamepadButton(GamepadKeys.Button.B).whenPressed(
 
-            new SequentialCommandGroup(
-                    new InstantCommand(() -> outake.SettriggerR(Outake.triggerPosition)),
-                    new WaitCommand(100),
-                    new InstantCommand(() -> outake.SettriggerR(Outake.resetPosition))
-            ));
+                outake.shootR()
+        );
 
         // LEFT_BUMPER controlls the start and stop of the outake
         controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
