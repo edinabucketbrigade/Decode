@@ -15,6 +15,7 @@ import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.Outake;
 
 
 @Autonomous
@@ -49,9 +50,9 @@ public class auto extends CommandOpMode {
                 // Shoot the left side twice, then the right
                 new InstantCommand(() -> outake.StartOutake()),
                 new WaitCommand(500),
-              outake.shootL(),
+                outake.shootL(),
                 new WaitCommand(1000),
-               outake.shootR(),
+                outake.shootR(),
                 new WaitCommand(500),
                 new InstantCommand(() -> outake.SettriggerR(Outake.triggerPosition)),
                 new WaitCommand(100),

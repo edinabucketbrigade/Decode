@@ -17,6 +17,8 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Outake;
 
 @TeleOp(name = "MainTeleOp", group = "TeleOp")
 public class MainTeleOp extends CommandOpMode {
