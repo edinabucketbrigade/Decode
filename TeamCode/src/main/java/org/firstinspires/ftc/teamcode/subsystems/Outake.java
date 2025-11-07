@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.CommandBase;
+import com.seattlesolvers.solverslib.command.ConditionalCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -93,6 +94,20 @@ public class Outake extends SubsystemBase {
                     new InstantCommand(() -> SettriggerR(triggerPosition)),
                     new WaitCommand(triggerDelay),
                     new InstantCommand(() -> SettriggerR(resetPosition))
+            );
+        }
+        public CommandBase shootPurp() {
+            return new ConditionalCommand(
+                    shootL(),
+                    shootR(),
+                    () -> getLeftColor() == 2
+            );
+         }
+        public CommandBase shootGreen() {
+            return new ConditionalCommand(
+                    shootR(),
+                    shootL(),
+                    () -> getRightColor() == 1
             );
         }
     public void ToggleOutake() {
