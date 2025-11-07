@@ -43,7 +43,8 @@ public class Outake extends SubsystemBase {
             flywheel.setRunMode(Motor.RunMode.VelocityControl);
             flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
             flywheel.setInverted(true);
-            flywheel.setVeloCoefficients(kP, kV, 0);
+            flywheel.setVeloCoefficients(kP, 0, 0);
+            flywheel.setFeedforwardCoefficients(0, kV);
             isRunning = false;
 
             triggerL = new ServoEx(hardwareMap,"Servo_Left", 0,1);

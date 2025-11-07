@@ -22,7 +22,8 @@ public class Intake extends SubsystemBase {
         flywheel.setBuffer(1.0);
         maxSpeed = flywheel.ACHIEVABLE_MAX_TICKS_PER_SECOND;
         flywheel.setRunMode(Motor.RunMode.VelocityControl);
-        flywheel.setVeloCoefficients(kP, kV, 0);
+        flywheel.setVeloCoefficients(kP, 0, 0);
+        flywheel.setFeedforwardCoefficients(0, kV);
         isRunning = false;
     }
 

@@ -6,26 +6,33 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
+import com.seattlesolvers.solverslib.util.TelemetryData;
 
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outake;
 
+import java.util.List;
 
-@Autonomous
+
+@Autonomous(name = "Auto", group = "Auto")
 public class auto extends CommandOpMode {
     private Follower follower;
+    private TelemetryData telemetryData = new TelemetryData(telemetry);
+
     private autoPath1 autoPath;
     private Outake outake;
+    private Intake intake;
+    private List<LynxModule> hubs;
 
-
-    // Mechanism commands - replace these with your actual subsystem commands
 
 
     @Override
@@ -35,6 +42,9 @@ public class auto extends CommandOpMode {
         // Initialize follower
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose((new Pose(56.000, 8.000)));
+
+        hubs = hardwareMap.getAll(LynxModule.class);
+        hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
 
         autoPath = new autoPath1();
         autoPath.Paths(follower);
@@ -74,8 +84,12 @@ public class auto extends CommandOpMode {
 
     @Override
     public void run() {
+        hubs.forEach(LynxModule::clearBulkCache);
         super.run();
 
-
+        telemetryData.addData("X", follower.getPose().getX());
+        telemetryData.addData("Y", follower.getPose().getY());
+        telemetryData.addData("Heading", follower.getPose().getHeading());
+        telemetryData.update();
     }
 }
