@@ -6,9 +6,12 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 
 @Configurable
 public class Intake extends SubsystemBase {
+    private Telemetry telemetryM;
     private MotorEx flywheel;
     private double maxSpeed;
     public static double kP = 20;
@@ -16,7 +19,8 @@ public class Intake extends SubsystemBase {
     public static double speed = 1.0;
 
     public boolean isRunning;
-    public Intake(HardwareMap hardwareMap) {
+    public Intake(HardwareMap hardwareMap, Telemetry m) {
+        telemetryM = m;
 
         flywheel = new MotorEx(hardwareMap, "flywheel_intake", Motor.GoBILDA.RPM_1150);
         flywheel.setBuffer(1.0);

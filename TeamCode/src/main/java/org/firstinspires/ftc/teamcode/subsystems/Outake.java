@@ -16,10 +16,13 @@ import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.sun.source.tree.IfTree;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 import java.util.Set;
 
 @Configurable
 public class Outake extends SubsystemBase {
+        private Telemetry telemetryM;
         private MotorEx flywheel;
         private ServoEx triggerL;
         private ServoEx triggerR;
@@ -36,7 +39,8 @@ public class Outake extends SubsystemBase {
         public static long triggerDelay = 150;
         public boolean isRunning;
 
-        public Outake(HardwareMap hardwareMap) {
+        public Outake(HardwareMap hardwareMap, Telemetry m) {
+            telemetryM = m;
 
             flywheel = new MotorEx(hardwareMap, "flywheel_outake", Motor.GoBILDA.BARE);
             flywheel.setBuffer(1.0);
@@ -97,18 +101,26 @@ public class Outake extends SubsystemBase {
             );
         }
         public CommandBase shootPurp() {
+            /*
             return new ConditionalCommand(
                     shootL(),
                     shootR(),
                     () -> getLeftColor() == 2
             );
+
+             */
+            return null;
          }
         public CommandBase shootGreen() {
+            /*
             return new ConditionalCommand(
                     shootR(),
                     shootL(),
                     () -> getRightColor() == 1
             );
+
+             */
+            return null;
         }
     public void ToggleOutake() {
             if (!isRunning) {

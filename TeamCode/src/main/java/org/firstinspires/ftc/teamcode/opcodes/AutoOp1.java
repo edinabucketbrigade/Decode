@@ -18,6 +18,7 @@ import com.seattlesolvers.solverslib.util.TelemetryData;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.auto.autoPath1;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outake;
 
@@ -29,8 +30,7 @@ public class AutoOp1 extends CommandOpMode {
     private Follower follower;
 
     private autoPath1 autoPath;
-    private Outake outake;
-    private Intake intake;
+    private BucketRobot robot;
     private List<LynxModule> hubs;
     Telemetry bTelemetry;
 
@@ -40,6 +40,8 @@ public class AutoOp1 extends CommandOpMode {
     public void initialize() {
         bTelemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
         super.reset();
+
+        robot = new BucketRobot(hardwareMap, bTelemetry);
 
         // Initialize follower
         follower = Constants.createFollower(hardwareMap);
@@ -51,7 +53,7 @@ public class AutoOp1 extends CommandOpMode {
         autoPath = new autoPath1();
         autoPath.Paths(follower);
 
-        outake = new Outake(hardwareMap);
+
 
         // Create the autonomous command sequence
         SequentialCommandGroup autonomousSequence = new SequentialCommandGroup(
@@ -60,15 +62,13 @@ public class AutoOp1 extends CommandOpMode {
 
                 new WaitCommand(500),
                 // Shoot the left side twice, then the right
-                new InstantCommand(() -> outake.StartOutake()),
+                robot.enableOutake(),
                 new WaitCommand(500),
-                outake.shootL(),
+                robot.shootLeft(),
                 new WaitCommand(1000),
-                outake.shootR(),
+                robot.shootRight(),
                 new WaitCommand(500),
-                new InstantCommand(() -> outake.SettriggerR(Outake.triggerPosition)),
-                new WaitCommand(100),
-                new InstantCommand(() -> outake.SettriggerR(Outake.resetPosition)),
+                robot.shootRight(),
 
                 // Goes to the nearest artifacts  and collects them
                 new FollowPathCommand(follower, autoPath.Path2),

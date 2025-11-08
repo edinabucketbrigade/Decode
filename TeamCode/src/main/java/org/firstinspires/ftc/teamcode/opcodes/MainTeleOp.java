@@ -23,6 +23,7 @@ import com.bylazar.telemetry.JoinedTelemetry;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outake;
 
@@ -35,9 +36,7 @@ public class MainTeleOp extends CommandOpMode {
     private List<LynxModule> hubs;
     Telemetry bTelemetry;
 
-
-    private Intake intake;
-    private Outake outake;
+    private BucketRobot robot;
 
     @Override
     public void initialize() {
@@ -47,8 +46,7 @@ public class MainTeleOp extends CommandOpMode {
         follower.update();
         follower.startTeleopDrive();
 
-        intake = new Intake(hardwareMap);
-        outake = new Outake(hardwareMap);
+        robot = new BucketRobot(hardwareMap, bTelemetry);
         controller = new GamepadEx(gamepad1);
 
         hubs = hardwareMap.getAll(LynxModule.class);
@@ -56,20 +54,19 @@ public class MainTeleOp extends CommandOpMode {
 
         // A triggers and resets left servo
         controller.getGamepadButton(GamepadKeys.Button.A).whenPressed(
-                outake.shootL()
+                robot.shootLeft()
         );
         // B triggers and resets right servo
         controller.getGamepadButton(GamepadKeys.Button.B).whenPressed(
-
-                outake.shootR()
+                robot.shootRight()
         );
 
         // LEFT_BUMPER controlls the start and stop of the outake
         controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
-                .whenPressed(new InstantCommand(() -> outake.ToggleOutake()));
+                .whenPressed(robot.toggleIntake());
         // RIGHT_BUMPER controlls the start and stop of the intake
         controller.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
-                .whenPressed(new InstantCommand(() -> intake.ToggleIntake()));
+                .whenPressed(robot.toggleOutake());
 
     }
 
