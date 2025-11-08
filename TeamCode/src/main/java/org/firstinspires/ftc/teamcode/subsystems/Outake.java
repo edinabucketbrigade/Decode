@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.ConditionalCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
@@ -22,116 +23,175 @@ import java.util.Set;
 
 @Configurable
 public class Outake extends SubsystemBase {
-        private Telemetry telemetryM;
-        private MotorEx flywheel;
-        private ServoEx triggerL;
-        private ServoEx triggerR;
-        private SensorColor leftSensor;
-        private SensorColor rightSensor;
-        private double maxSpeed;
+    private Telemetry telemetryM;
+    private MotorEx flywheel;
+    private ServoEx triggerL;
+    private ServoEx triggerR;
+    private SensorColor leftSensor;
+    private SensorColor rightSensor;
+    private double maxSpeed;
 
-        public static double kP = 20;
-        public static double kV = 0.7;
-        public static double speed = 1.0;
+    public static double kP = 20;
+    public static double kV = 0.7;
+    public static double speed = 1.0;
 
-        public static double resetPosition = 0.4;
-        public static double triggerPosition = 1.0;
-        public static long triggerDelay = 150;
-        public boolean isRunning;
+    public static double resetPosition = 0.4;
+    public static double triggerPosition = 1.0;
+    public static long triggerDelay = 150;
+    public boolean isRunning;
 
-        public Outake(HardwareMap hardwareMap, Telemetry m) {
-            telemetryM = m;
+    public enum ArtifactColor {
+        GREEN,
+        PURPLE,
+        NOTHING
+    }
 
-            flywheel = new MotorEx(hardwareMap, "flywheel_outake", Motor.GoBILDA.BARE);
-            flywheel.setBuffer(1.0);
-            maxSpeed = flywheel.ACHIEVABLE_MAX_TICKS_PER_SECOND;
-            flywheel.setRunMode(Motor.RunMode.VelocityControl);
-            flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-            flywheel.setInverted(true);
-            flywheel.setVeloCoefficients(kP, 0, 0);
-            flywheel.setFeedforwardCoefficients(0, kV);
-            isRunning = false;
+    public Camera.ARTIFACTPATTERN pattern;
+    ;
 
-            triggerL = new ServoEx(hardwareMap,"Servo_Left", 0,1);
-            triggerR = new ServoEx(hardwareMap, "Servo_Right", 0, 1);
-            triggerL.setInverted(true);
-            triggerL.set(resetPosition);
-            triggerR.set(resetPosition);
+    public Outake(HardwareMap hardwareMap, Telemetry m) {
+        telemetryM = m;
 
-            //leftSensor = new SensorColor(hardwareMap, "Sensor_Left");
-            //rightSensor = new SensorColor(hardwareMap, "Sensor_Right");
-        }
+        flywheel = new MotorEx(hardwareMap, "flywheel_outake", Motor.GoBILDA.BARE);
+        flywheel.setBuffer(1.0);
+        maxSpeed = flywheel.ACHIEVABLE_MAX_TICKS_PER_SECOND;
+        flywheel.setRunMode(Motor.RunMode.VelocityControl);
+        flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        flywheel.setInverted(true);
+        flywheel.setVeloCoefficients(kP, 0, 0);
+        flywheel.setFeedforwardCoefficients(0, kV);
+        isRunning = false;
 
-        public void StartOutake() {
+        triggerL = new ServoEx(hardwareMap, "Servo_Left", 0, 1);
+        triggerR = new ServoEx(hardwareMap, "Servo_Right", 0, 1);
+        triggerL.setInverted(true);
+        triggerL.set(resetPosition);
+        triggerR.set(resetPosition);
 
-            flywheel.setVelocity(speed*maxSpeed);
+        leftSensor = new SensorColor(hardwareMap, "Sensor_Left");
+        rightSensor = new SensorColor(hardwareMap, "Sensor_Right");
+    }
 
-        }
+    private ArtifactColor getLeftColor() {
+        if (leftSensor.green() > 150)
+            return ArtifactColor.GREEN;
+        if (leftSensor.red() > 150 && leftSensor.blue() > 150)
+            return ArtifactColor.PURPLE;
 
-        public void StopOutake() {
+        return ArtifactColor.NOTHING;
+    }
 
-            flywheel.set(0);
-        }
+    @Override
+    public void periodic() {
+        telemetryM.addData("Left Sensor", "%i-%i-%i",
+                leftSensor.red(), leftSensor.blue(), leftSensor.green());
+        telemetryM.addData("Right Sensor", "%i-%i-%i",
+                rightSensor.red(), rightSensor.blue(), rightSensor.green());
 
-        private boolean isFast() {
-            return (flywheel.getVelocity()/(speed*maxSpeed)) > 0.9;
-        }
+    }
 
-        public void SettriggerL(double position){
-            triggerL.set(position);
-        }
-        public void SettriggerR(double position){
-            triggerR.set(position);
-        }
-        public CommandBase shootL(){
-           return new SequentialCommandGroup(
-                    new WaitUntilCommand(this::isFast),
-                    new InstantCommand(() -> SettriggerL(triggerPosition)),
-                    new WaitCommand(triggerDelay),
-                    new InstantCommand(() -> SettriggerL(resetPosition))
-            );
+    private ArtifactColor getRightColor() {
+        if (rightSensor.green() > 150)
+            return ArtifactColor.GREEN;
+        if (rightSensor.red() > 150 && rightSensor.blue() > 150)
+            return ArtifactColor.PURPLE;
 
-        }
-        public CommandBase shootR() {
-            return new SequentialCommandGroup(
-                    new WaitUntilCommand(this::isFast),
-                    new InstantCommand(() -> SettriggerR(triggerPosition)),
-                    new WaitCommand(triggerDelay),
-                    new InstantCommand(() -> SettriggerR(resetPosition))
-            );
-        }
-        public CommandBase shootPurp() {
-            /*
-            return new ConditionalCommand(
-                    shootL(),
-                    shootR(),
-                    () -> getLeftColor() == 2
-            );
+        return ArtifactColor.NOTHING;
+    }
 
-             */
-            return null;
-         }
-        public CommandBase shootGreen() {
-            /*
-            return new ConditionalCommand(
-                    shootR(),
-                    shootL(),
-                    () -> getRightColor() == 1
-            );
+    public void StartOutake() {
 
-             */
-            return null;
-        }
+        flywheel.setVelocity(speed * maxSpeed);
+
+    }
+
+
+    public void StopOutake() {
+
+        flywheel.set(0);
+    }
+
+    private boolean isFast() {
+        return (flywheel.getVelocity() / (speed * maxSpeed)) > 0.9;
+    }
+
+    public void SettriggerL(double position) {
+        triggerL.set(position);
+    }
+
+    public void SettriggerR(double position) {
+        triggerR.set(position);
+    }
+
+    public CommandBase shootL() {
+        return new SequentialCommandGroup(
+                new WaitUntilCommand(this::isFast),
+                new InstantCommand(() -> SettriggerL(triggerPosition)),
+                new WaitCommand(triggerDelay),
+                new InstantCommand(() -> SettriggerL(resetPosition))
+        );
+
+    }
+
+    public CommandBase shootR() {
+        return new SequentialCommandGroup(
+                new WaitUntilCommand(this::isFast),
+                new InstantCommand(() -> SettriggerR(triggerPosition)),
+                new WaitCommand(triggerDelay),
+                new InstantCommand(() -> SettriggerR(resetPosition))
+        );
+    }
+
+    public CommandBase shootLoaded() {
+        if (getLeftColor() != ArtifactColor.NOTHING)
+            return shootL();
+        if (getRightColor() != ArtifactColor.NOTHING)
+            return shootR();
+        return new WaitCommand(1);
+    }
+
+
+    public CommandBase shootPurple() {
+
+        return new ConditionalCommand(
+                shootL(),
+                shootR(),
+                () -> getLeftColor() == ArtifactColor.PURPLE
+        );
+
+    }
+
+    public CommandBase shootGreen() {
+
+        return new ConditionalCommand(
+                shootR(),
+                shootL(),
+                () -> getRightColor() == ArtifactColor.GREEN
+        );
+    }
+
     public void ToggleOutake() {
-            if (!isRunning) {
-                isRunning = true;
-                StartOutake();
-            } else {
-                isRunning = false;
-                StopOutake();
+        if (!isRunning) {
+            isRunning = true;
+            StartOutake();
+        } else {
+            isRunning = false;
+            StopOutake();
 
-            }
         }
     }
 
+
+    public CommandBase shootPatern() {
+            if (pattern == Camera.ARTIFACTPATTERN.GPP) {
+                return new SequentialCommandGroup(
+                        shootGreen(),
+                        shootPurple(),
+                        shootLoaded()
+                        );
+            }
+
+            return new WaitCommand(1);
+    }
+}
 

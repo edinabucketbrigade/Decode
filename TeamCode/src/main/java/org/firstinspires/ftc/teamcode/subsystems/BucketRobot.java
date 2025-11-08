@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.Robot;
+import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.hardware.SimpleServo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class BucketRobot extends Robot {
     private Intake intake;
     private Outake outake;
+    private Camera camera;
     private Telemetry telemetryM;
 
     SimpleServo s;
@@ -23,7 +25,8 @@ public class BucketRobot extends Robot {
         telemetryM = m;
         outake = new Outake(hMap, telemetryM);
         intake = new Intake(hMap, telemetryM);
-        register(outake, intake);
+        camera = new Camera(hMap, m);
+        register(outake, intake, camera);
     }
     public Command enableIntake() {
         return new InstantCommand(() -> intake.StartIntake());
@@ -51,4 +54,20 @@ public class BucketRobot extends Robot {
         return outake.shootL();
     }
 
+    public Command shootGreen() {
+        return outake.shootGreen();
+    }
+    public Command shootPurple() {
+        return outake.shootPurple();
+    }
+    public Command shootLoaded() {
+        return outake.shootloaded();
+    }
+
+    @Override
+    public void run() {
+        camera.getPattern();
+
+        super.run();
+    }
 }

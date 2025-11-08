@@ -52,12 +52,12 @@ public class MainTeleOp extends CommandOpMode {
         hubs = hardwareMap.getAll(LynxModule.class);
         hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
 
-        // A triggers and resets left servo
-        controller.getGamepadButton(GamepadKeys.Button.A).whenPressed(
+        // DPAD_LEFT and resets left servo
+        controller.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
                 robot.shootLeft()
         );
-        // B triggers and resets right servo
-        controller.getGamepadButton(GamepadKeys.Button.B).whenPressed(
+        // DPAD_RIGHT triggers and resets right servo
+        controller.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
                 robot.shootRight()
         );
 
@@ -67,7 +67,15 @@ public class MainTeleOp extends CommandOpMode {
         // RIGHT_BUMPER controlls the start and stop of the intake
         controller.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
                 .whenPressed(robot.toggleOutake());
-
+        // A shoots the green ball
+        controller.getGamepadButton(GamepadKeys.Button.A)
+                .whenPressed(robot.shootGreen());
+        // B shoots the purple ball
+        controller.getGamepadButton(GamepadKeys.Button.B)
+                .whenPressed(robot.shootPurple());
+        // X shoots the collum with a ball in it (shoots loaded)
+        controller.getGamepadButton(GamepadKeys.Button.X)
+                .whenPressed(robot.shootLoaded());
     }
 
     @Override
@@ -75,6 +83,7 @@ public class MainTeleOp extends CommandOpMode {
         hubs.forEach(LynxModule::clearBulkCache);
 
         super.run();
+        robot.run();
         follower.update();
 
         follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);

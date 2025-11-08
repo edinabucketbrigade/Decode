@@ -64,8 +64,7 @@ public class Camera extends SubsystemBase  {
                 pattern = ARTIFACTPATTERN.PGP;
             } else if (detection.id == ARTIFACTPATTERN.PPG.getPattern()) {
                 pattern = ARTIFACTPATTERN.PPG;
-            } else
-                pattern = ARTIFACTPATTERN.NONE;
+            }
         }
     }
 

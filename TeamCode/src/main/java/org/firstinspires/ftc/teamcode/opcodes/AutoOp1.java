@@ -88,6 +88,7 @@ public class AutoOp1 extends CommandOpMode {
     public void run() {
         hubs.forEach(LynxModule::clearBulkCache);
         super.run();
+        robot.run();
 
         bTelemetry.addData("X", follower.getPose().getX());
         bTelemetry.addData("Y", follower.getPose().getY());
