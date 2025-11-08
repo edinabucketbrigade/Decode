@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opcodes;
+package org.firstinspires.ftc.teamcode.auto;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;

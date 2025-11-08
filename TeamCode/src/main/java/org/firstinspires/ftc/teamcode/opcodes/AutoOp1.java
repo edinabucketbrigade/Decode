@@ -1,10 +1,9 @@
 package org.firstinspires.ftc.teamcode.opcodes;
 
+import com.bylazar.telemetry.JoinedTelemetry;
+import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
-import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.PathChain;
 
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
@@ -16,6 +15,8 @@ import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.auto.autoPath1;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outake;
@@ -23,20 +24,21 @@ import org.firstinspires.ftc.teamcode.subsystems.Outake;
 import java.util.List;
 
 
-@Autonomous(name = "Auto", group = "Auto")
-public class auto extends CommandOpMode {
+@Autonomous(name = "AutoOp1", group = "Auto")
+public class AutoOp1 extends CommandOpMode {
     private Follower follower;
-    private TelemetryData telemetryData = new TelemetryData(telemetry);
 
     private autoPath1 autoPath;
     private Outake outake;
     private Intake intake;
     private List<LynxModule> hubs;
+    Telemetry bTelemetry;
 
 
 
     @Override
     public void initialize() {
+        bTelemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
         super.reset();
 
         // Initialize follower
@@ -87,9 +89,9 @@ public class auto extends CommandOpMode {
         hubs.forEach(LynxModule::clearBulkCache);
         super.run();
 
-        telemetryData.addData("X", follower.getPose().getX());
-        telemetryData.addData("Y", follower.getPose().getY());
-        telemetryData.addData("Heading", follower.getPose().getHeading());
-        telemetryData.update();
+        bTelemetry.addData("X", follower.getPose().getX());
+        bTelemetry.addData("Y", follower.getPose().getY());
+        bTelemetry.addData("Heading", follower.getPose().getHeading());
+        bTelemetry.update();
     }
 }

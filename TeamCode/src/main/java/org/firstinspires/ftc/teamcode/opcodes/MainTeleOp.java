@@ -4,6 +4,8 @@ package org.firstinspires.ftc.teamcode.opcodes;
 
 import android.hardware.TriggerEventListener;
 
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
@@ -17,7 +19,9 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import com.seattlesolvers.solverslib.util.TelemetryData;
+import com.bylazar.telemetry.JoinedTelemetry;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outake;
@@ -27,10 +31,9 @@ import java.util.List;
 @TeleOp(name = "MainTeleOp", group = "TeleOp")
 public class MainTeleOp extends CommandOpMode {
     private GamepadEx controller;
-    private ButtonReader lB;
     private Follower follower;
     private List<LynxModule> hubs;
-    TelemetryData telemetryData = new TelemetryData(telemetry);
+    Telemetry bTelemetry;
 
 
     private Intake intake;
@@ -38,18 +41,19 @@ public class MainTeleOp extends CommandOpMode {
 
     @Override
     public void initialize() {
-        follower = Constants.createFollower(hardwareMap);
+        bTelemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
         super.reset();
+        follower = Constants.createFollower(hardwareMap);
         follower.update();
+        follower.startTeleopDrive();
+
+        intake = new Intake(hardwareMap);
+        outake = new Outake(hardwareMap);
+        controller = new GamepadEx(gamepad1);
 
         hubs = hardwareMap.getAll(LynxModule.class);
         hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
 
-        controller = new GamepadEx(gamepad1);
-        lB = new ButtonReader(controller,GamepadKeys.Button.LEFT_BUMPER);
-        follower.startTeleopDrive();
-        intake = new Intake(hardwareMap);
-        outake = new Outake(hardwareMap);
         // A triggers and resets left servo
         controller.getGamepadButton(GamepadKeys.Button.A).whenPressed(
                 outake.shootL()
@@ -72,13 +76,14 @@ public class MainTeleOp extends CommandOpMode {
     @Override
     public void run() {
         hubs.forEach(LynxModule::clearBulkCache);
+
         super.run();
         follower.update();
 
         follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
-        telemetryData.addData("X", follower.getPose().getX());
-        telemetryData.addData("Y", follower.getPose().getY());
-        telemetryData.addData("Heading", follower.getPose().getHeading());
-        telemetryData.update();
+        bTelemetry.addData("X", follower.getPose().getX());
+        bTelemetry.addData("Y", follower.getPose().getY());
+        bTelemetry.addData("Heading", follower.getPose().getHeading());
+        bTelemetry.update();
     }
 }
