@@ -9,6 +9,7 @@ import com.seattlesolvers.solverslib.command.SelectCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.HashMap;
@@ -39,13 +40,19 @@ public class BucketRobot extends Robot {
 
     ARTIFACTPATTERN pattern;
 
-    private static boolean disableCamera = true;
+    private static boolean disableCamera = false;
 
-    public BucketRobot(HardwareMap hMap){
-        outake = new Outake(hMap);
-        intake = new Intake(hMap);
-        if (!disableCamera) camera = new Camera(hMap);
-        register(outake, intake, camera);
+    private Telemetry telemetry;
+    public BucketRobot(HardwareMap hMap, Telemetry t){
+        telemetry = t;
+        outake = new Outake(hMap, t);
+        intake = new Intake(hMap, t);
+        if (!disableCamera) {
+            camera = new Camera(hMap, t);
+            register(outake, intake, camera);
+        } else
+            register(outake, intake);
+
         pattern = ARTIFACTPATTERN.NONE;
     }
     public Command enableIntake() {

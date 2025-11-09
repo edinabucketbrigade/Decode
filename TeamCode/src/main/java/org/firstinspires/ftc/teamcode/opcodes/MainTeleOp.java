@@ -23,7 +23,7 @@ public class MainTeleOp extends CommandOpMode {
 
     private BucketRobot robot;
 
-    private boolean disableDrivetrain = true;
+    private boolean disableDrivetrain = false;
     @Override
     public void initialize() {
         telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
@@ -35,7 +35,7 @@ public class MainTeleOp extends CommandOpMode {
             follower.startTeleopDrive();
         }
 
-        robot = new BucketRobot(hardwareMap);
+        robot = new BucketRobot(hardwareMap, telemetry);
         controller = new GamepadEx(gamepad1);
 
         hubs = hardwareMap.getAll(LynxModule.class);
@@ -51,10 +51,10 @@ public class MainTeleOp extends CommandOpMode {
         );
 
         // LEFT_BUMPER controlls the start and stop of the outake
-        controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
+        controller.getGamepadButton(GamepadKeys.Button.DPAD_UP)
                 .whenPressed(robot.toggleIntake());
         // RIGHT_BUMPER controlls the start and stop of the intake
-        controller.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+        controller.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
                 .whenPressed(robot.toggleOutake());
         // A shoots the green ball
         controller.getGamepadButton(GamepadKeys.Button.A)
@@ -76,13 +76,14 @@ public class MainTeleOp extends CommandOpMode {
 
         if (!disableDrivetrain) {
             follower.update();
-
             follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
+
+            telemetry.addData("Pose", "<%d,%d>:%d",
+                    follower.getPose().getX(),
+                    follower.getPose().getY(),
+                    follower.getPose().getHeading());
         }
-        telemetry.addData("Pose", "<%d,%d>:%d",
-                follower.getPose().getX(),
-                follower.getPose().getY(),
-                follower.getPose().getHeading());
+
         telemetry.update();
     }
 }

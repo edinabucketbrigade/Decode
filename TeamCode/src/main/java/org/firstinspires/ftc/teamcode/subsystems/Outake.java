@@ -17,6 +17,8 @@ import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 @Configurable
 public class Outake extends SubsystemBase {
     private MotorEx flywheel;
@@ -26,8 +28,10 @@ public class Outake extends SubsystemBase {
     private SensorColor rightSensor;
     private double maxSpeed;
 
-    public static double kP = 20;
-    public static double kV = 0.7;
+    public static double kP = 0.001;
+    public static double kS = 0.0;
+    public static double kV = 1.0;
+    public static double kA = 0.0;
     public static double speed = 1.0;
 
     public static double resetPosition = 0.4;
@@ -42,10 +46,10 @@ public class Outake extends SubsystemBase {
     }
 
 
-    private final static boolean disableSensors = true;
-
-    public Outake(HardwareMap hardwareMap) {
-
+    private final static boolean disableSensors = false;
+    private Telemetry telemetry;
+    public Outake(HardwareMap hardwareMap, Telemetry t){
+        telemetry = t;
         flywheel = new MotorEx(hardwareMap, "flywheel_outake", Motor.GoBILDA.BARE);
         flywheel.setBuffer(1.0);
         maxSpeed = flywheel.ACHIEVABLE_MAX_TICKS_PER_SECOND;
@@ -53,7 +57,7 @@ public class Outake extends SubsystemBase {
         flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
         flywheel.setInverted(true);
         flywheel.setVeloCoefficients(kP, 0, 0);
-        flywheel.setFeedforwardCoefficients(0, kV);
+        flywheel.setFeedforwardCoefficients(kS, kV, kA);
         isRunning = false;
 
         triggerL = new ServoEx(hardwareMap, "Servo_Left", 0, 1);
@@ -71,13 +75,17 @@ public class Outake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        telemetry.addData("Left Sensor", "%d-%d-%d",
+
+        if (leftSensor != null) telemetry.addData("Left Sensor", "%d-%d-%d",
                 leftSensor.red(), leftSensor.blue(), leftSensor.green());
-        telemetry.addData("Right Sensor", "%d-%d-%d",
+
+        if (rightSensor != null) telemetry.addData("Right Sensor", "%d-%d-%d",
                 rightSensor.red(), rightSensor.blue(), rightSensor.green());
 
-        telemetry.addData("Outake velocity", "%f - $f", flywheel.getVelocity(),
-                (flywheel.getVelocity() / (speed * maxSpeed)));
+        if (flywheel != null)
+            telemetry.addData("Outake velocity", "%f - %f",
+                    flywheel.getVelocity(),
+                    (flywheel.getVelocity() / (speed * maxSpeed)));
     }
 
     private ArtifactColor getLeftColor() {
@@ -118,13 +126,16 @@ public class Outake extends SubsystemBase {
         triggerR.set(position);
     }
 
-    public final Command waitUntilFast = new WaitUntilCommand(() ->
-            (flywheel.getVelocity() / (speed * maxSpeed)) > 0.95
-    );
+    public final Command waitUntilFast() {
+        return new WaitUntilCommand(() ->
+                (flywheel.getVelocity() / (speed * maxSpeed)) > 0.95
+        );
+
+    }
 
     public CommandBase shootL() {
         return new SequentialCommandGroup(
-                waitUntilFast,
+                waitUntilFast(),
                 new InstantCommand(() -> SettriggerL(triggerPosition)),
                 new WaitCommand(triggerDelay),
                 new InstantCommand(() -> SettriggerL(resetPosition))
@@ -134,7 +145,7 @@ public class Outake extends SubsystemBase {
 
     public CommandBase shootR() {
         return new SequentialCommandGroup(
-                waitUntilFast,
+                waitUntilFast(),
                 new InstantCommand(() -> SettriggerR(triggerPosition)),
                 new WaitCommand(triggerDelay),
                 new InstantCommand(() -> SettriggerR(resetPosition))
