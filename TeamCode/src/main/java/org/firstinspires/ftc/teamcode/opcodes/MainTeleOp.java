@@ -38,13 +38,16 @@ public class MainTeleOp extends CommandOpMode {
 
     private BucketRobot robot;
 
+    private boolean disableDrivetrain = true;
     @Override
     public void initialize() {
         bTelemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
         super.reset();
-        follower = Constants.createFollower(hardwareMap);
-        follower.update();
-        follower.startTeleopDrive();
+        if (!disableDrivetrain) {
+            follower = Constants.createFollower(hardwareMap);
+            follower.update();
+            follower.startTeleopDrive();
+        }
 
         robot = new BucketRobot(hardwareMap, bTelemetry);
         controller = new GamepadEx(gamepad1);
@@ -84,9 +87,12 @@ public class MainTeleOp extends CommandOpMode {
 
         super.run();
         robot.run();
-        follower.update();
 
-        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
+        if (!disableDrivetrain) {
+            follower.update();
+
+            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
+        }
         bTelemetry.addData("X", follower.getPose().getX());
         bTelemetry.addData("Y", follower.getPose().getY());
         bTelemetry.addData("Heading", follower.getPose().getHeading());

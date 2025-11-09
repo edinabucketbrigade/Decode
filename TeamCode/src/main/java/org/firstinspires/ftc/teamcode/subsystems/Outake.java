@@ -12,14 +12,10 @@ import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.hardware.SensorColor;
 import com.seattlesolvers.solverslib.hardware.ServoEx;
-import com.seattlesolvers.solverslib.hardware.SimpleServo;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
-import com.sun.source.tree.IfTree;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-
-import java.util.Set;
 
 @Configurable
 public class Outake extends SubsystemBase {
@@ -46,8 +42,6 @@ public class Outake extends SubsystemBase {
         NOTHING
     }
 
-    public Camera.ARTIFACTPATTERN pattern;
-    ;
 
     public Outake(HardwareMap hardwareMap, Telemetry m) {
         telemetryM = m;
@@ -83,11 +77,13 @@ public class Outake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        telemetryM.addData("Left Sensor", "%i-%i-%i",
+        telemetryM.addData("Left Sensor", "%d-%d-%d",
                 leftSensor.red(), leftSensor.blue(), leftSensor.green());
-        telemetryM.addData("Right Sensor", "%i-%i-%i",
+        telemetryM.addData("Right Sensor", "%d-%d-%d",
                 rightSensor.red(), rightSensor.blue(), rightSensor.green());
 
+        telemetryM.addData("Outake velocity", "%f - $f", flywheel.getVelocity(),
+                (flywheel.getVelocity() / (speed * maxSpeed)));
     }
 
     private ArtifactColor getRightColor() {
@@ -100,20 +96,14 @@ public class Outake extends SubsystemBase {
     }
 
     public void StartOutake() {
-
         flywheel.setVelocity(speed * maxSpeed);
-
     }
 
 
     public void StopOutake() {
-
         flywheel.set(0);
     }
 
-    private boolean isFast() {
-        return (flywheel.getVelocity() / (speed * maxSpeed)) > 0.9;
-    }
 
     public void SettriggerL(double position) {
         triggerL.set(position);
@@ -123,9 +113,13 @@ public class Outake extends SubsystemBase {
         triggerR.set(position);
     }
 
+    public final Command waitUntilFast = new WaitUntilCommand(() ->
+             (flywheel.getVelocity() / (speed * maxSpeed)) > 0.95
+            );
+
     public CommandBase shootL() {
         return new SequentialCommandGroup(
-                new WaitUntilCommand(this::isFast),
+                waitUntilFast,
                 new InstantCommand(() -> SettriggerL(triggerPosition)),
                 new WaitCommand(triggerDelay),
                 new InstantCommand(() -> SettriggerL(resetPosition))
@@ -135,7 +129,7 @@ public class Outake extends SubsystemBase {
 
     public CommandBase shootR() {
         return new SequentialCommandGroup(
-                new WaitUntilCommand(this::isFast),
+                waitUntilFast,
                 new InstantCommand(() -> SettriggerR(triggerPosition)),
                 new WaitCommand(triggerDelay),
                 new InstantCommand(() -> SettriggerR(resetPosition))
@@ -179,19 +173,6 @@ public class Outake extends SubsystemBase {
             StopOutake();
 
         }
-    }
-
-
-    public CommandBase shootPatern() {
-            if (pattern == Camera.ARTIFACTPATTERN.GPP) {
-                return new SequentialCommandGroup(
-                        shootGreen(),
-                        shootPurple(),
-                        shootLoaded()
-                        );
-            }
-
-            return new WaitCommand(1);
     }
 }
 

@@ -30,8 +30,8 @@ dependencies {
     //implementation 'dev.nextftc:bindings:1.0.1'
     //implementation 'dev.nextftc:control:1.0.0'
     //implementation 'dev.nextftc.extensions:pedro:1.0.0'
-    implementation "org.solverslib:core:SNAPSHOT-7cdcc66" // core
-    implementation "org.solverslib:pedroPathing:SNAPSHOT-7cdcc66" // pedroPathing
+    implementation "org.solverslib:core:0.3.3" // core
+    implementation "org.solverslib:pedroPathing:0.3.3" // pedroPathing
 }
 repositories {
     maven {

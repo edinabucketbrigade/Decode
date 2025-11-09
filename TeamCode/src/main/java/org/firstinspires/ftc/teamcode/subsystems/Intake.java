@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.seattlesolvers.solverslib.command.Command;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
@@ -32,14 +34,10 @@ public class Intake extends SubsystemBase {
     }
 
     public void StartIntake() {
-
         flywheel.setVelocity(speed*maxSpeed);
-
-
     }
 
     public void StopIntake() {
-
         flywheel.set(0);
     }
 
@@ -51,8 +49,12 @@ public class Intake extends SubsystemBase {
            isRunning = false;
            StopIntake();
        }
-
-
     }
 
+
+    @Override
+    public void periodic() {
+        telemetryM.addData("Intake velocity", "%f - $f", flywheel.getVelocity(),
+                (flywheel.getVelocity() / (speed * maxSpeed)));
+    }
 }

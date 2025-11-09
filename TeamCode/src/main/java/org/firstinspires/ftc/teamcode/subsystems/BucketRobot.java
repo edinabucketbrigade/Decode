@@ -1,15 +1,19 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.Robot;
+import com.seattlesolvers.solverslib.command.SelectCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
+import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.hardware.SimpleServo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+
+import java.util.HashMap;
 
 
 @Configurable
@@ -19,14 +23,33 @@ public class BucketRobot extends Robot {
     private Camera camera;
     private Telemetry telemetryM;
 
-    SimpleServo s;
 
+    public enum ARTIFACTPATTERN {
+        NONE(0),
+        GPP(21),
+        PGP(22),
+        PPG(23);
+        private final int pattern;
+
+        private ARTIFACTPATTERN(int pattern) {
+            this.pattern = pattern;
+        }
+
+        public int getPattern() {
+            return pattern;
+        }
+    };
+
+    ARTIFACTPATTERN pattern;
+
+    private static boolean disableCamera = true;
     public BucketRobot(HardwareMap hMap, Telemetry m){
         telemetryM = m;
         outake = new Outake(hMap, telemetryM);
         intake = new Intake(hMap, telemetryM);
-        camera = new Camera(hMap, m);
+        if (!disableCamera) camera = new Camera(hMap, m);
         register(outake, intake, camera);
+        pattern = ARTIFACTPATTERN.NONE;
     }
     public Command enableIntake() {
         return new InstantCommand(() -> intake.StartIntake());
@@ -61,12 +84,57 @@ public class BucketRobot extends Robot {
         return outake.shootPurple();
     }
     public Command shootLoaded() {
-        return outake.shootloaded();
+        return outake.shootLoaded();
+    }
+
+    private Command shootGPP() {
+        return new SequentialCommandGroup(
+                shootGreen(),
+                shootPurple(),
+                shootLoaded()
+        );
+    }
+    private Command shootPGP() {
+        return new SequentialCommandGroup(
+                shootPurple(),
+                shootGreen(),
+                shootLoaded()
+        );
+    }
+    private Command shootPPG() {
+        return new SequentialCommandGroup(
+                shootPurple(),
+                shootPurple(),
+                shootLoaded()
+        );
+    }
+    public Command shootPattern() {
+        return new SelectCommand(
+                new HashMap<Object, Command>() {{
+                    put(ARTIFACTPATTERN.GPP,shootGPP());
+                    put(ARTIFACTPATTERN.PGP,shootPGP());
+                    put(ARTIFACTPATTERN.PPG,shootPPG());
+                    put(ARTIFACTPATTERN.NONE, new WaitCommand(1));
+                }},
+                () -> pattern);
     }
 
     @Override
     public void run() {
-        camera.getPattern();
+        if (camera != null && pattern == ARTIFACTPATTERN.NONE){
+            for (AprilTagDetection detection : camera.currentDetections) {
+                if (detection.id == ARTIFACTPATTERN.GPP.getPattern()) {
+                    pattern = ARTIFACTPATTERN.GPP;
+                    break;
+                } else if (detection.id == ARTIFACTPATTERN.PGP.getPattern()) {
+                    pattern = ARTIFACTPATTERN.PGP;
+                    break;
+                } else if (detection.id == ARTIFACTPATTERN.PPG.getPattern()) {
+                    pattern = ARTIFACTPATTERN.PPG;
+                    break;
+                }
+            }
+        }
 
         super.run();
     }

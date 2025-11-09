@@ -17,23 +17,9 @@ import java.util.List;
 @Configurable
 public class Camera extends SubsystemBase  {
     private Telemetry telemetryM;
-    public enum ARTIFACTPATTERN {
-        NONE(0),
-        GPP(21),
-        PGP(22),
-        PPG(23);
-        private final int pattern;
 
-        private ARTIFACTPATTERN(int pattern) {
-            this.pattern = pattern;
-        }
 
-        public int getPattern() {
-            return pattern;
-        }
-    };
-
-    public ARTIFACTPATTERN pattern;
+    public BucketRobot.ARTIFACTPATTERN pattern;
     /**
      * The variable to store our instance of the AprilTag processor.
      */
@@ -43,6 +29,9 @@ public class Camera extends SubsystemBase  {
      * The variable to store our instance of the vision portal.
      */
     private VisionPortal visionPortal;
+
+    public List<AprilTagDetection> currentDetections;
+
     public Camera(HardwareMap hMap, Telemetry m) {
         telemetryM = m;
 
@@ -50,23 +39,11 @@ public class Camera extends SubsystemBase  {
 
         visionPortal = VisionPortal.easyCreateWithDefaults(
                 hMap.get(WebcamName.class, "Webcam"), aprilTag);
-        pattern = ARTIFACTPATTERN.NONE;
     }
 
     @Override
     public void periodic() {
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-
-        for (AprilTagDetection detection : currentDetections) {
-            if (detection.id == ARTIFACTPATTERN.GPP.getPattern()) {
-                pattern = ARTIFACTPATTERN.GPP;
-            } else if (detection.id == ARTIFACTPATTERN.PGP.getPattern()) {
-                pattern = ARTIFACTPATTERN.PGP;
-            } else if (detection.id == ARTIFACTPATTERN.PPG.getPattern()) {
-                pattern = ARTIFACTPATTERN.PPG;
-            }
-        }
+        currentDetections = aprilTag.getDetections();
     }
 
-    public ARTIFACTPATTERN getPattern() {return pattern;}
 }
