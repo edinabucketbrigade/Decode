@@ -1,60 +1,48 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.seattlesolvers.solverslib.command.Command;
-import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.hardware.motors.Motor;
-import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import dev.nextftc.control.ControlSystem;
+import dev.nextftc.control.KineticState;
+import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.utility.InstantCommand;
+import dev.nextftc.core.subsystems.Subsystem;
+import dev.nextftc.ftc.ActiveOpMode;
+import dev.nextftc.hardware.controllable.RunToVelocity;
+import dev.nextftc.hardware.impl.MotorEx;
 
 
 @Configurable
-public class Intake extends SubsystemBase {
-    private Telemetry telemetryM;
-    private MotorEx flywheel;
-    private double maxSpeed;
-    public static double kP = 20;
-    public static double kV = 0.7;
-    public static double speed = 1.0;
+public class Intake implements Subsystem {
+    public static final Intake INSTANCE = new Intake();
 
-    public boolean isRunning;
-    public Intake(HardwareMap hardwareMap, Telemetry m) {
-        telemetryM = m;
+    private final MotorEx flywheel = new MotorEx("flywheel_intake").floatMode();
+    private final ControlSystem controller = ControlSystem.builder()
+            .velPid(0.01,0,0)
+            .basicFF(0.01,0,0.03)
+            .build();
 
-        flywheel = new MotorEx(hardwareMap, "flywheel_intake", Motor.GoBILDA.RPM_1150);
-        flywheel.setBuffer(1.0);
-        maxSpeed = flywheel.ACHIEVABLE_MAX_TICKS_PER_SECOND;
-        flywheel.setRunMode(Motor.RunMode.VelocityControl);
-        flywheel.setVeloCoefficients(kP, 0, 0);
-        flywheel.setFeedforwardCoefficients(0, kV);
-        isRunning = false;
-    }
+    public static double percentage = 1.0;
+    public static final double maxVel = 145.6*1150/60; //cpr * rpm / 60 sec/min
 
-    public void StartIntake() {
-        flywheel.setVelocity(speed*maxSpeed);
-    }
+    public final Command off = new RunToVelocity(controller, 0.0)
+            .requires(this).named("IntakeOff");
 
-    public void StopIntake() {
-        flywheel.set(0);
-    }
+    public final Command on = new RunToVelocity(controller, maxVel*percentage)
+            .requires(this).named("IntakeOn");
 
-    public void ToggleIntake(){
-       if (!isRunning) {
-           isRunning = true;
-           StartIntake();
-       }else {
-           isRunning = false;
-           StopIntake();
-       }
-    }
-
+    public final Command updateVel = new InstantCommand(() ->
+        controller.setGoal(new KineticState(Double.POSITIVE_INFINITY,
+                145.6*1150/60*percentage))
+    ).requires(this).named("UpdateIntake");
 
     @Override
+    public void initialize() {
+        controller.setGoal(new KineticState(Double.POSITIVE_INFINITY, 0));
+    }
+    @Override
     public void periodic() {
-        telemetryM.addData("Intake velocity", "%f - $f", flywheel.getVelocity(),
-                (flywheel.getVelocity() / (speed * maxSpeed)));
+        flywheel.setPower(controller.calculate(flywheel.getState()));
+        ActiveOpMode.telemetry().addData("Intake velocity", flywheel.getVelocity());
     }
 }

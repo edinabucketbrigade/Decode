@@ -2,100 +2,85 @@ package org.firstinspires.ftc.teamcode.opcodes;
 
 
 
-import android.hardware.TriggerEventListener;
+import static dev.nextftc.bindings.Bindings.*;
 
 import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
-import com.pedropathing.follower.Follower;
-import com.qualcomm.hardware.lynx.LynxModule;
-import com.seattlesolvers.solverslib.command.CommandOpMode;
+
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
-import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.button.GamepadButton;
-import com.seattlesolvers.solverslib.gamepad.ButtonReader;
-import com.seattlesolvers.solverslib.gamepad.GamepadEx;
-import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
-import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
-import com.seattlesolvers.solverslib.util.TelemetryData;
+
 import com.bylazar.telemetry.JoinedTelemetry;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outake;
 
-import java.util.List;
+
+import dev.nextftc.core.components.BindingsComponent;
+import dev.nextftc.core.components.SubsystemComponent;
+import dev.nextftc.extensions.pedro.PedroComponent;
+import dev.nextftc.extensions.pedro.PedroDriverControlled;
+import dev.nextftc.ftc.Gamepads;
+import dev.nextftc.ftc.NextFTCOpMode;
+import dev.nextftc.ftc.components.BulkReadComponent;
+import dev.nextftc.hardware.driving.DriverControlledCommand;
 
 @TeleOp(name = "MainTeleOp", group = "TeleOp")
-public class MainTeleOp extends CommandOpMode {
-    private GamepadEx controller;
-    private Follower follower;
-    private List<LynxModule> hubs;
-    Telemetry bTelemetry;
-
-    private BucketRobot robot;
-
-    private boolean disableDrivetrain = true;
-    @Override
-    public void initialize() {
-        bTelemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
-        super.reset();
-        if (!disableDrivetrain) {
-            follower = Constants.createFollower(hardwareMap);
-            follower.update();
-            follower.startTeleopDrive();
-        }
-
-        robot = new BucketRobot(hardwareMap, bTelemetry);
-        controller = new GamepadEx(gamepad1);
-
-        hubs = hardwareMap.getAll(LynxModule.class);
-        hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
-
-        // DPAD_LEFT and resets left servo
-        controller.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
-                robot.shootLeft()
+public class MainTeleOp extends NextFTCOpMode {
+    public MainTeleOp() {
+        addComponents(
+                BulkReadComponent.INSTANCE,
+                BindingsComponent.INSTANCE,
+                new SubsystemComponent(BucketRobot.INSTANCE),
+                new PedroComponent(Constants::createFollower)
         );
-        // DPAD_RIGHT triggers and resets right servo
-        controller.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
-                robot.shootRight()
+    }
+    @Override public void onWaitForStart() { }
+    @Override public void onStartButtonPressed() {
+        DriverControlledCommand driverControlled = new PedroDriverControlled(
+                Gamepads.gamepad1().leftStickY(),
+                Gamepads.gamepad1().leftStickX(),
+                Gamepads.gamepad1().rightStickX()
         );
+        driverControlled.schedule();
+    }
+    @Override public void onStop() { }
+    @Override public void onInit() {
+        telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
 
-        // LEFT_BUMPER controlls the start and stop of the outake
-        controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
-                .whenPressed(robot.toggleIntake());
-        // RIGHT_BUMPER controlls the start and stop of the intake
-        controller.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
-                .whenPressed(robot.toggleOutake());
+
+        Gamepads.gamepad1().leftTrigger().greaterThan(0.2)
+                .whenBecomesTrue(Outake.INSTANCE.shootL);
+        Gamepads.gamepad1().rightTrigger().greaterThan(0.2)
+                .whenBecomesTrue(Outake.INSTANCE.shootR);
+
+        Gamepads.gamepad1().leftBumper()
+                .toggleOnBecomesTrue()
+                .whenBecomesTrue(Intake.INSTANCE.on)
+                .whenBecomesFalse(Intake.INSTANCE.off);
+
+        Gamepads.gamepad1().rightBumper()
+                .toggleOnBecomesTrue()
+                .whenBecomesTrue(Outake.INSTANCE.on)
+                .whenBecomesFalse(Outake.INSTANCE.off);
         // A shoots the green ball
-        controller.getGamepadButton(GamepadKeys.Button.A)
-                .whenPressed(robot.shootGreen());
+        Gamepads.gamepad1().a()
+                .whenBecomesTrue(Outake.INSTANCE.shootGreen);
         // B shoots the purple ball
-        controller.getGamepadButton(GamepadKeys.Button.B)
-                .whenPressed(robot.shootPurple());
+        Gamepads.gamepad1().b()
+                .whenBecomesTrue(Outake.INSTANCE.shootPurple);
         // X shoots the collum with a ball in it (shoots loaded)
-        controller.getGamepadButton(GamepadKeys.Button.X)
-                .whenPressed(robot.shootLoaded());
+        Gamepads.gamepad1().x()
+                .whenBecomesTrue(Outake.INSTANCE.shootLoaded);
     }
 
-    @Override
-    public void run() {
-        hubs.forEach(LynxModule::clearBulkCache);
+    @Override public void onUpdate() {
 
-        super.run();
-        robot.run();
-
-        if (!disableDrivetrain) {
-            follower.update();
-
-            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
-        }
-        bTelemetry.addData("X", follower.getPose().getX());
-        bTelemetry.addData("Y", follower.getPose().getY());
-        bTelemetry.addData("Heading", follower.getPose().getHeading());
-        bTelemetry.update();
+        telemetry.addData("Pose", "<%d,%d>:%d",
+                PedroComponent.follower().getPose().getX(),
+                PedroComponent.follower().getPose().getY(),
+                PedroComponent.follower().getPose().getHeading());
+        telemetry.update();
     }
 }

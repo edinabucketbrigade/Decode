@@ -1,18 +1,14 @@
 package org.firstinspires.ftc.teamcode.opcodes;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+
 import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 
-import com.qualcomm.hardware.lynx.LynxModule;
-import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
-import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
-import com.seattlesolvers.solverslib.util.TelemetryData;
+
 
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -24,75 +20,68 @@ import org.firstinspires.ftc.teamcode.subsystems.Outake;
 
 import java.util.List;
 
+import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.CommandManager;
+import dev.nextftc.core.commands.delays.Delay;
+import dev.nextftc.core.commands.groups.SequentialGroup;
+import dev.nextftc.core.components.BindingsComponent;
+import dev.nextftc.core.components.SubsystemComponent;
+import dev.nextftc.extensions.pedro.FollowPath;
+import dev.nextftc.extensions.pedro.PedroComponent;
+import dev.nextftc.ftc.NextFTCOpMode;
+import dev.nextftc.ftc.components.BulkReadComponent;
+
 
 @Autonomous(name = "AutoOp1", group = "Auto")
-public class AutoOp1 extends CommandOpMode {
-    private Follower follower;
+public class AutoOp1 extends NextFTCOpMode {
+    public AutoOp1() {
+        addComponents(
+                BulkReadComponent.INSTANCE,
+                BindingsComponent.INSTANCE,
+                new SubsystemComponent(BucketRobot.INSTANCE),
+                new PedroComponent(Constants::createFollower)
+        );
 
-    private autoPath1 autoPath;
-    private BucketRobot robot;
-    private List<LynxModule> hubs;
-    Telemetry bTelemetry;
+    }
 
+    private Command autonomousSequence;
 
+    @Override public void onWaitForStart() { }
+    @Override public void onStartButtonPressed() {
+        // Schedule the autonomous sequence
+        autonomousSequence.schedule();
+    }
+    @Override public void onUpdate() {
+        telemetry.addData("Pose", "<%d,%d>:%d",
+                PedroComponent.follower().getPose().getX(),
+                PedroComponent.follower().getPose().getY(),
+                PedroComponent.follower().getPose().getHeading());
+        telemetry.addData("Command", CommandManager.INSTANCE.snapshot());
+        telemetry.update();
 
-    @Override
-    public void initialize() {
-        bTelemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
-        super.reset();
+    }
+    @Override public void onStop() { }
 
-        robot = new BucketRobot(hardwareMap, bTelemetry);
+    @Override public void onInit() {
+        telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
 
-        // Initialize follower
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose((new Pose(56.000, 8.000)));
+        PedroComponent.follower().setStartingPose((new Pose(56.000, 8.000)));
 
-        hubs = hardwareMap.getAll(LynxModule.class);
-        hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
-
-        autoPath = new autoPath1();
-        autoPath.Paths(follower);
-
-
+        autoPath1 autoPath = new autoPath1();
+        autoPath.Paths(PedroComponent.follower());
 
         // Create the autonomous command sequence
-        SequentialCommandGroup autonomousSequence = new SequentialCommandGroup(
+        autonomousSequence = new SequentialGroup(
                 // Score preload
-                new FollowPathCommand(follower, autoPath.Path1),
-
-                new WaitCommand(500),
-                // Shoot the left side twice, then the right
-                robot.enableOutake(),
-                new WaitCommand(500),
-                robot.shootLeft(),
-                new WaitCommand(1000),
-                robot.shootRight(),
-                new WaitCommand(500),
-                robot.shootRight(),
-
+                new FollowPath(autoPath.Path1),
+                Outake.INSTANCE.on,
+                BucketRobot.INSTANCE.shootPattern,
                 // Goes to the nearest artifacts  and collects them
-                new FollowPathCommand(follower, autoPath.Path2),
-
-
-                new FollowPathCommand(follower, autoPath.Path3)
-
-
+                new FollowPath(autoPath.Path2),
+                new FollowPath(autoPath.Path3)
 
         );
 
-        // Schedule the autonomous sequence
-        schedule(autonomousSequence);
     }
 
-    @Override
-    public void run() {
-        hubs.forEach(LynxModule::clearBulkCache);
-        super.run();
-        robot.run();
-
-        bTelemetry.addData("X", follower.getPose().getX());
-        bTelemetry.addData("Y", follower.getPose().getY());
-        bTelemetry.addData("Heading", follower.getPose().getHeading());
-        bTelemetry.update();
-    }
 }

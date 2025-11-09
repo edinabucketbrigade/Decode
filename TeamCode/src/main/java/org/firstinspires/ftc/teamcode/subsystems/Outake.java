@@ -1,40 +1,45 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.seattlesolvers.solverslib.command.Command;
-import com.seattlesolvers.solverslib.command.CommandBase;
-import com.seattlesolvers.solverslib.command.ConditionalCommand;
-import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
-import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.WaitUntilCommand;
-import com.seattlesolvers.solverslib.hardware.SensorColor;
-import com.seattlesolvers.solverslib.hardware.ServoEx;
-import com.seattlesolvers.solverslib.hardware.motors.Motor;
-import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import dev.nextftc.control.ControlSystem;
+import dev.nextftc.control.KineticState;
+import dev.nextftc.core.commands.Command;
+import dev.nextftc.core.commands.conditionals.IfElseCommand;
+import dev.nextftc.core.commands.delays.Delay;
+import dev.nextftc.core.commands.delays.WaitUntil;
+import dev.nextftc.core.commands.groups.SequentialGroup;
+import dev.nextftc.core.commands.utility.InstantCommand;
+import dev.nextftc.core.subsystems.Subsystem;
+import dev.nextftc.ftc.ActiveOpMode;
+import dev.nextftc.hardware.controllable.RunToVelocity;
+import dev.nextftc.hardware.impl.MotorEx;
+import dev.nextftc.hardware.impl.ServoEx;
+import dev.nextftc.hardware.positionable.SetPosition;
 
 @Configurable
-public class Outake extends SubsystemBase {
-    private Telemetry telemetryM;
-    private MotorEx flywheel;
-    private ServoEx triggerL;
-    private ServoEx triggerR;
-    private SensorColor leftSensor;
-    private SensorColor rightSensor;
-    private double maxSpeed;
+public class Outake implements Subsystem {
+    public static final Outake INSTANCE = new Outake();
 
-    public static double kP = 20;
-    public static double kV = 0.7;
-    public static double speed = 1.0;
-
+    private final ServoEx triggerL = new ServoEx("Servo_Left");
+    private final ServoEx triggerR = new ServoEx("Servo_Right");
+    public static double triggerDelay = 0.150;
     public static double resetPosition = 0.4;
     public static double triggerPosition = 1.0;
-    public static long triggerDelay = 150;
-    public boolean isRunning;
+
+    private ColorSensor leftSensor;
+    private ColorSensor rightSensor;
+
+    private final MotorEx flywheel = new MotorEx("flywheel_intake").reversed().floatMode();
+    private final ControlSystem controller = ControlSystem.builder()
+            .velPid(0.01,0,0)
+            .basicFF(0.01,0,0.03)
+            .build();
+
+    public static double percentage = 1.0;
+    public static final double maxVel = 28 * 6000/60; //cpr * rpm / 60 sec/min
 
     public enum ArtifactColor {
         GREEN,
@@ -42,48 +47,59 @@ public class Outake extends SubsystemBase {
         NOTHING
     }
 
-
-    public Outake(HardwareMap hardwareMap, Telemetry m) {
-        telemetryM = m;
-
-        flywheel = new MotorEx(hardwareMap, "flywheel_outake", Motor.GoBILDA.BARE);
-        flywheel.setBuffer(1.0);
-        maxSpeed = flywheel.ACHIEVABLE_MAX_TICKS_PER_SECOND;
-        flywheel.setRunMode(Motor.RunMode.VelocityControl);
-        flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        flywheel.setInverted(true);
-        flywheel.setVeloCoefficients(kP, 0, 0);
-        flywheel.setFeedforwardCoefficients(0, kV);
-        isRunning = false;
-
-        triggerL = new ServoEx(hardwareMap, "Servo_Left", 0, 1);
-        triggerR = new ServoEx(hardwareMap, "Servo_Right", 0, 1);
-        triggerL.setInverted(true);
-        triggerL.set(resetPosition);
-        triggerR.set(resetPosition);
-
-        leftSensor = new SensorColor(hardwareMap, "Sensor_Left");
-        rightSensor = new SensorColor(hardwareMap, "Sensor_Right");
+    public Outake() {
+        leftSensor = ActiveOpMode.hardwareMap().get(ColorSensor.class, "Left Sensor");
+        rightSensor = ActiveOpMode.hardwareMap().get(ColorSensor.class, "Right Sensor");
+        triggerL.getServo().setDirection(Servo.Direction.REVERSE);
     }
+    @Override
+    public void initialize() {
+        triggerL.setPosition(resetPosition);
+        triggerR.setPosition(resetPosition);
+        controller.setGoal(new KineticState(Double.POSITIVE_INFINITY, 0));
+    }
+
+    @Override
+    public void periodic() {
+        flywheel.setPower(controller.calculate(flywheel.getState()));
+        ActiveOpMode.telemetry().addData("Left Sensor", "%d-%d-%d",
+                leftSensor.red(), leftSensor.blue(), leftSensor.green());
+        ActiveOpMode.telemetry().addData("Right Sensor", "%d-%d-%d",
+                rightSensor.red(), rightSensor.blue(), rightSensor.green());
+        ActiveOpMode.telemetry().addData("Outake velocity", flywheel.getVelocity());
+    }
+
+    public final Command off = new RunToVelocity(controller, 0.0)
+            .requires(this).named("OutakeOff");
+    public final Command on = new RunToVelocity(controller, maxVel*percentage)
+            .requires(this).named("OutakeOn");
+    public final Command updateVel = new InstantCommand(() ->
+            controller.setGoal(new KineticState(Double.POSITIVE_INFINITY,
+                    145.6*1150/60*percentage))
+    ).requires(this).named("UpdateOutake");
+
+    public final Command waitUntilFast =
+            new WaitUntil(() -> (flywheel.getVelocity() / maxVel) > 0.95);
+
+    public final Command shootL = new SequentialGroup(
+            waitUntilFast,
+            new SetPosition(triggerL, triggerPosition).requires(this),
+            new Delay(triggerDelay),
+            new SetPosition(triggerL, resetPosition).requires(this)
+    );
+    public final Command shootR = new SequentialGroup(
+            waitUntilFast,
+            new SetPosition(triggerR, triggerPosition).requires(this),
+            new Delay(triggerDelay),
+            new SetPosition(triggerR, resetPosition).requires(this)
+    );
 
     private ArtifactColor getLeftColor() {
         if (leftSensor.green() > 150)
             return ArtifactColor.GREEN;
         if (leftSensor.red() > 150 && leftSensor.blue() > 150)
             return ArtifactColor.PURPLE;
-
         return ArtifactColor.NOTHING;
-    }
-
-    @Override
-    public void periodic() {
-        telemetryM.addData("Left Sensor", "%d-%d-%d",
-                leftSensor.red(), leftSensor.blue(), leftSensor.green());
-        telemetryM.addData("Right Sensor", "%d-%d-%d",
-                rightSensor.red(), rightSensor.blue(), rightSensor.green());
-
-        telemetryM.addData("Outake velocity", "%f - $f", flywheel.getVelocity(),
-                (flywheel.getVelocity() / (speed * maxSpeed)));
     }
 
     private ArtifactColor getRightColor() {
@@ -91,88 +107,29 @@ public class Outake extends SubsystemBase {
             return ArtifactColor.GREEN;
         if (rightSensor.red() > 150 && rightSensor.blue() > 150)
             return ArtifactColor.PURPLE;
-
         return ArtifactColor.NOTHING;
     }
 
-    public void StartOutake() {
-        flywheel.setVelocity(speed * maxSpeed);
-    }
+    public Command shootLoaded = new IfElseCommand(
+            () -> getLeftColor() != ArtifactColor.NOTHING,
+            shootL,
+            new IfElseCommand(
+                    () -> getRightColor() != ArtifactColor.NOTHING,
+                    shootR
+            ));
 
 
-    public void StopOutake() {
-        flywheel.set(0);
-    }
+    public Command shootPurple = new IfElseCommand(
+            () -> getLeftColor() == ArtifactColor.PURPLE,
+            shootL,
+            shootR
+    );
 
+    public Command shootGreen = new IfElseCommand(
+            () -> getLeftColor() == ArtifactColor.GREEN,
+            shootL,
+            shootR
+    );
 
-    public void SettriggerL(double position) {
-        triggerL.set(position);
-    }
-
-    public void SettriggerR(double position) {
-        triggerR.set(position);
-    }
-
-    public final Command waitUntilFast = new WaitUntilCommand(() ->
-             (flywheel.getVelocity() / (speed * maxSpeed)) > 0.95
-            );
-
-    public CommandBase shootL() {
-        return new SequentialCommandGroup(
-                waitUntilFast,
-                new InstantCommand(() -> SettriggerL(triggerPosition)),
-                new WaitCommand(triggerDelay),
-                new InstantCommand(() -> SettriggerL(resetPosition))
-        );
-
-    }
-
-    public CommandBase shootR() {
-        return new SequentialCommandGroup(
-                waitUntilFast,
-                new InstantCommand(() -> SettriggerR(triggerPosition)),
-                new WaitCommand(triggerDelay),
-                new InstantCommand(() -> SettriggerR(resetPosition))
-        );
-    }
-
-    public CommandBase shootLoaded() {
-        if (getLeftColor() != ArtifactColor.NOTHING)
-            return shootL();
-        if (getRightColor() != ArtifactColor.NOTHING)
-            return shootR();
-        return new WaitCommand(1);
-    }
-
-
-    public CommandBase shootPurple() {
-
-        return new ConditionalCommand(
-                shootL(),
-                shootR(),
-                () -> getLeftColor() == ArtifactColor.PURPLE
-        );
-
-    }
-
-    public CommandBase shootGreen() {
-
-        return new ConditionalCommand(
-                shootR(),
-                shootL(),
-                () -> getRightColor() == ArtifactColor.GREEN
-        );
-    }
-
-    public void ToggleOutake() {
-        if (!isRunning) {
-            isRunning = true;
-            StartOutake();
-        } else {
-            isRunning = false;
-            StopOutake();
-
-        }
-    }
 }
 
