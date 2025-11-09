@@ -4,23 +4,16 @@ import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
-import com.seattlesolvers.solverslib.util.TelemetryData;
 
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.auto.autoPath1;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
-import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.Outake;
 
 import java.util.List;
 
@@ -32,16 +25,15 @@ public class AutoOp1 extends CommandOpMode {
     private autoPath1 autoPath;
     private BucketRobot robot;
     private List<LynxModule> hubs;
-    Telemetry bTelemetry;
 
 
 
     @Override
     public void initialize() {
-        bTelemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
+        telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
         super.reset();
 
-        robot = new BucketRobot(hardwareMap, bTelemetry);
+        robot = new BucketRobot(hardwareMap);
 
         // Initialize follower
         follower = Constants.createFollower(hardwareMap);
@@ -63,12 +55,7 @@ public class AutoOp1 extends CommandOpMode {
                 new WaitCommand(500),
                 // Shoot the left side twice, then the right
                 robot.enableOutake(),
-                new WaitCommand(500),
-                robot.shootLeft(),
-                new WaitCommand(1000),
-                robot.shootRight(),
-                new WaitCommand(500),
-                robot.shootRight(),
+                robot.shootPattern(),
 
                 // Goes to the nearest artifacts  and collects them
                 new FollowPathCommand(follower, autoPath.Path2),
@@ -90,9 +77,10 @@ public class AutoOp1 extends CommandOpMode {
         super.run();
         robot.run();
 
-        bTelemetry.addData("X", follower.getPose().getX());
-        bTelemetry.addData("Y", follower.getPose().getY());
-        bTelemetry.addData("Heading", follower.getPose().getHeading());
-        bTelemetry.update();
+        telemetry.addData("Pose", "<%d,%d>:%d",
+                follower.getPose().getX(),
+                follower.getPose().getY(),
+                follower.getPose().getHeading());
+        telemetry.update();
     }
 }

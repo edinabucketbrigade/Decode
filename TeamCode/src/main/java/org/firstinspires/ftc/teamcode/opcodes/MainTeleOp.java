@@ -1,31 +1,17 @@
 package org.firstinspires.ftc.teamcode.opcodes;
 
 
-
-import android.hardware.TriggerEventListener;
-
+import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
-import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.button.GamepadButton;
-import com.seattlesolvers.solverslib.gamepad.ButtonReader;
+import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
-import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
-import com.seattlesolvers.solverslib.util.TelemetryData;
-import com.bylazar.telemetry.JoinedTelemetry;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
-import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.Outake;
 
 import java.util.List;
 
@@ -34,22 +20,22 @@ public class MainTeleOp extends CommandOpMode {
     private GamepadEx controller;
     private Follower follower;
     private List<LynxModule> hubs;
-    Telemetry bTelemetry;
 
     private BucketRobot robot;
 
     private boolean disableDrivetrain = true;
     @Override
     public void initialize() {
-        bTelemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
+        telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
         super.reset();
+
         if (!disableDrivetrain) {
             follower = Constants.createFollower(hardwareMap);
             follower.update();
             follower.startTeleopDrive();
         }
 
-        robot = new BucketRobot(hardwareMap, bTelemetry);
+        robot = new BucketRobot(hardwareMap);
         controller = new GamepadEx(gamepad1);
 
         hubs = hardwareMap.getAll(LynxModule.class);
@@ -93,9 +79,10 @@ public class MainTeleOp extends CommandOpMode {
 
             follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
         }
-        bTelemetry.addData("X", follower.getPose().getX());
-        bTelemetry.addData("Y", follower.getPose().getY());
-        bTelemetry.addData("Heading", follower.getPose().getHeading());
-        bTelemetry.update();
+        telemetry.addData("Pose", "<%d,%d>:%d",
+                follower.getPose().getX(),
+                follower.getPose().getY(),
+                follower.getPose().getHeading());
+        telemetry.update();
     }
 }

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
@@ -11,15 +13,12 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.hardware.SensorColor;
-import com.seattlesolvers.solverslib.hardware.ServoEx;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
 @Configurable
 public class Outake extends SubsystemBase {
-    private Telemetry telemetryM;
     private MotorEx flywheel;
     private ServoEx triggerL;
     private ServoEx triggerR;
@@ -43,8 +42,9 @@ public class Outake extends SubsystemBase {
     }
 
 
-    public Outake(HardwareMap hardwareMap, Telemetry m) {
-        telemetryM = m;
+    private final static boolean disableSensors = true;
+
+    public Outake(HardwareMap hardwareMap) {
 
         flywheel = new MotorEx(hardwareMap, "flywheel_outake", Motor.GoBILDA.BARE);
         flywheel.setBuffer(1.0);
@@ -62,11 +62,26 @@ public class Outake extends SubsystemBase {
         triggerL.set(resetPosition);
         triggerR.set(resetPosition);
 
-        leftSensor = new SensorColor(hardwareMap, "Sensor_Left");
-        rightSensor = new SensorColor(hardwareMap, "Sensor_Right");
+        if (!disableSensors) {
+            leftSensor = new SensorColor(hardwareMap, "Sensor_Left");
+            rightSensor = new SensorColor(hardwareMap, "Sensor_Right");
+        }
+    }
+
+
+    @Override
+    public void periodic() {
+        telemetry.addData("Left Sensor", "%d-%d-%d",
+                leftSensor.red(), leftSensor.blue(), leftSensor.green());
+        telemetry.addData("Right Sensor", "%d-%d-%d",
+                rightSensor.red(), rightSensor.blue(), rightSensor.green());
+
+        telemetry.addData("Outake velocity", "%f - $f", flywheel.getVelocity(),
+                (flywheel.getVelocity() / (speed * maxSpeed)));
     }
 
     private ArtifactColor getLeftColor() {
+        if (disableSensors) return ArtifactColor.GREEN;
         if (leftSensor.green() > 150)
             return ArtifactColor.GREEN;
         if (leftSensor.red() > 150 && leftSensor.blue() > 150)
@@ -75,18 +90,8 @@ public class Outake extends SubsystemBase {
         return ArtifactColor.NOTHING;
     }
 
-    @Override
-    public void periodic() {
-        telemetryM.addData("Left Sensor", "%d-%d-%d",
-                leftSensor.red(), leftSensor.blue(), leftSensor.green());
-        telemetryM.addData("Right Sensor", "%d-%d-%d",
-                rightSensor.red(), rightSensor.blue(), rightSensor.green());
-
-        telemetryM.addData("Outake velocity", "%f - $f", flywheel.getVelocity(),
-                (flywheel.getVelocity() / (speed * maxSpeed)));
-    }
-
     private ArtifactColor getRightColor() {
+        if (disableSensors) return ArtifactColor.GREEN;
         if (rightSensor.green() > 150)
             return ArtifactColor.GREEN;
         if (rightSensor.red() > 150 && rightSensor.blue() > 150)
@@ -114,8 +119,8 @@ public class Outake extends SubsystemBase {
     }
 
     public final Command waitUntilFast = new WaitUntilCommand(() ->
-             (flywheel.getVelocity() / (speed * maxSpeed)) > 0.95
-            );
+            (flywheel.getVelocity() / (speed * maxSpeed)) > 0.95
+    );
 
     public CommandBase shootL() {
         return new SequentialCommandGroup(
@@ -137,16 +142,19 @@ public class Outake extends SubsystemBase {
     }
 
     public CommandBase shootLoaded() {
-        if (getLeftColor() != ArtifactColor.NOTHING)
-            return shootL();
-        if (getRightColor() != ArtifactColor.NOTHING)
-            return shootR();
-        return new WaitCommand(1);
+        return new ConditionalCommand(
+                shootL(),
+                new ConditionalCommand(
+                        shootR(),
+                        new WaitCommand(1),
+                        () -> getRightColor() != ArtifactColor.NOTHING
+                ),
+                () -> getLeftColor() != ArtifactColor.NOTHING
+        );
     }
 
 
     public CommandBase shootPurple() {
-
         return new ConditionalCommand(
                 shootL(),
                 shootR(),

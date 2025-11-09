@@ -8,9 +8,7 @@ import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.command.SelectCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.hardware.SimpleServo;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.HashMap;
@@ -21,7 +19,6 @@ public class BucketRobot extends Robot {
     private Intake intake;
     private Outake outake;
     private Camera camera;
-    private Telemetry telemetryM;
 
 
     public enum ARTIFACTPATTERN {
@@ -43,11 +40,11 @@ public class BucketRobot extends Robot {
     ARTIFACTPATTERN pattern;
 
     private static boolean disableCamera = true;
-    public BucketRobot(HardwareMap hMap, Telemetry m){
-        telemetryM = m;
-        outake = new Outake(hMap, telemetryM);
-        intake = new Intake(hMap, telemetryM);
-        if (!disableCamera) camera = new Camera(hMap, m);
+
+    public BucketRobot(HardwareMap hMap){
+        outake = new Outake(hMap);
+        intake = new Intake(hMap);
+        if (!disableCamera) camera = new Camera(hMap);
         register(outake, intake, camera);
         pattern = ARTIFACTPATTERN.NONE;
     }
