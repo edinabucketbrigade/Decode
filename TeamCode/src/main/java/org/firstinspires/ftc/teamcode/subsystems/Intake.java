@@ -17,9 +17,11 @@ public class Intake implements Subsystem {
     public static final Intake INSTANCE = new Intake();
 
     private final MotorEx flywheel = new MotorEx("flywheel_intake").floatMode();
+    public static double kP = 0.01, kI = 0.0, kD = 0.1;
+    public static double kV = 0.01, kA = 0.0, kS = 0.01;
     private final ControlSystem controller = ControlSystem.builder()
-            .velPid(0.01,0,0)
-            .basicFF(0.01,0,0.03)
+            .velPid(kP, kI, kD)
+            .basicFF(kV, kA, kS)
             .build();
 
     public static double percentage = 1.0;

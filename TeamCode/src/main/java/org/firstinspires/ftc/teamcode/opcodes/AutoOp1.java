@@ -75,7 +75,7 @@ public class AutoOp1 extends NextFTCOpMode {
                 // Score preload
                 new FollowPath(autoPath.Path1),
                 Outake.INSTANCE.on,
-                BucketRobot.INSTANCE.shootPattern,
+                //BucketRobot.INSTANCE.shootPattern,
                 // Goes to the nearest artifacts  and collects them
                 new FollowPath(autoPath.Path2),
                 new FollowPath(autoPath.Path3)

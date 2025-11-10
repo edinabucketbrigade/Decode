@@ -8,7 +8,6 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import java.util.HashMap;
 
 import dev.nextftc.core.commands.Command;
-import dev.nextftc.core.commands.conditionals.SwitchCommand;
 import dev.nextftc.core.commands.groups.SequentialGroup;
 import dev.nextftc.core.subsystems.SubsystemGroup;
 
@@ -31,11 +30,13 @@ public class BucketRobot extends SubsystemGroup {
         public int getPattern() {
             return pattern;
         }
-    };
+    }
+
+    ;
 
     public ARTIFACTPATTERN pattern;
 
-    public BucketRobot(){
+    public BucketRobot() {
         super(Outake.INSTANCE, Intake.INSTANCE, Camera.INSTANCE);
         pattern = ARTIFACTPATTERN.NONE;
     }
@@ -56,16 +57,15 @@ public class BucketRobot extends SubsystemGroup {
             Outake.INSTANCE.shootPurple,
             Outake.INSTANCE.shootLoaded
     );
-
+/*
     public Command shootPattern = new SwitchCommand<>(() -> BucketRobot.INSTANCE.pattern)
             .withCase(BucketRobot.ARTIFACTPATTERN.GPP, BucketRobot.INSTANCE.shootGPP)
             .withCase(BucketRobot.ARTIFACTPATTERN.PGP, BucketRobot.INSTANCE.shootPGP)
-            .withCase(BucketRobot.ARTIFACTPATTERN.PPG, BucketRobot.INSTANCE.shootPPG)
-            ;
-
+            .withCase(BucketRobot.ARTIFACTPATTERN.PPG, BucketRobot.INSTANCE.shootPPG);
+*/
     @Override
     public void periodic() {
-        if (pattern == ARTIFACTPATTERN.NONE){
+        if (!Camera.INSTANCE.cameraDisabled && pattern == ARTIFACTPATTERN.NONE) {
             for (AprilTagDetection detection : Camera.INSTANCE.currentDetections) {
                 if (detection.id == ARTIFACTPATTERN.GPP.getPattern()) {
                     pattern = ARTIFACTPATTERN.GPP;

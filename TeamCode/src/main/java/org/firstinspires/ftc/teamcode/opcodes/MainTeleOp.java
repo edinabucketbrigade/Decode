@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.opcodes;
 
 
-
 import static dev.nextftc.bindings.Bindings.*;
 
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -26,28 +25,52 @@ import dev.nextftc.ftc.NextFTCOpMode;
 import dev.nextftc.ftc.components.BulkReadComponent;
 import dev.nextftc.hardware.driving.DriverControlledCommand;
 
+
 @TeleOp(name = "MainTeleOp", group = "TeleOp")
 public class MainTeleOp extends NextFTCOpMode {
+    private final boolean disableDrive = true;
     public MainTeleOp() {
-        addComponents(
-                BulkReadComponent.INSTANCE,
-                BindingsComponent.INSTANCE,
-                new SubsystemComponent(BucketRobot.INSTANCE),
-                new PedroComponent(Constants::createFollower)
-        );
+        if (disableDrive) {
+            addComponents(
+                    BulkReadComponent.INSTANCE,
+                    BindingsComponent.INSTANCE,
+                    new SubsystemComponent(BucketRobot.INSTANCE)
+            );
+
+        } else {
+            addComponents(
+                    BulkReadComponent.INSTANCE,
+                    BindingsComponent.INSTANCE,
+                    new SubsystemComponent(BucketRobot.INSTANCE),
+                    new PedroComponent(Constants::createFollower)
+            );
+        }
     }
-    @Override public void onWaitForStart() { }
-    @Override public void onStartButtonPressed() {
-        DriverControlledCommand driverControlled = new PedroDriverControlled(
-                Gamepads.gamepad1().leftStickY(),
-                Gamepads.gamepad1().leftStickX(),
-                Gamepads.gamepad1().rightStickX()
-        );
-        driverControlled.schedule();
+
+    @Override
+    public void onWaitForStart() {
     }
-    @Override public void onStop() { }
-    @Override public void onInit() {
-        telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
+
+    @Override
+    public void onStartButtonPressed() {
+        if (!disableDrive) {
+            DriverControlledCommand driverControlled = new PedroDriverControlled(
+                    Gamepads.gamepad1().leftStickY(),
+                    Gamepads.gamepad1().leftStickX(),
+                    Gamepads.gamepad1().rightStickX()
+            );
+
+            driverControlled.schedule();
+        }
+    }
+
+    @Override
+    public void onStop() {
+    }
+
+    @Override
+    public void onInit() {
+        //telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
 
 
         Gamepads.gamepad1().leftTrigger().greaterThan(0.2)
@@ -55,12 +78,12 @@ public class MainTeleOp extends NextFTCOpMode {
         Gamepads.gamepad1().rightTrigger().greaterThan(0.2)
                 .whenBecomesTrue(Outake.INSTANCE.shootR);
 
-        Gamepads.gamepad1().leftBumper()
+        Gamepads.gamepad1().dpadUp()
                 .toggleOnBecomesTrue()
                 .whenBecomesTrue(Intake.INSTANCE.on)
                 .whenBecomesFalse(Intake.INSTANCE.off);
 
-        Gamepads.gamepad1().rightBumper()
+        Gamepads.gamepad1().dpadDown()
                 .toggleOnBecomesTrue()
                 .whenBecomesTrue(Outake.INSTANCE.on)
                 .whenBecomesFalse(Outake.INSTANCE.off);
@@ -73,11 +96,14 @@ public class MainTeleOp extends NextFTCOpMode {
         // X shoots the collum with a ball in it (shoots loaded)
         Gamepads.gamepad1().x()
                 .whenBecomesTrue(Outake.INSTANCE.shootLoaded);
+
+
     }
 
-    @Override public void onUpdate() {
+    @Override
+    public void onUpdate() {
 
-        telemetry.addData("Pose", "<%d,%d>:%d",
+        if (!disableDrive) telemetry.addData("Pose", "<%d,%d>:%d",
                 PedroComponent.follower().getPose().getX(),
                 PedroComponent.follower().getPose().getY(),
                 PedroComponent.follower().getPose().getHeading());

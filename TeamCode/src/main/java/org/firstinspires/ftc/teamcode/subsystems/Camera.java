@@ -26,17 +26,21 @@ public class Camera implements Subsystem {
     private VisionPortal visionPortal;
 
     public List<AprilTagDetection> currentDetections;
+    public final boolean cameraDisabled = true;
 
     public Camera() {
-        aprilTag = AprilTagProcessor.easyCreateWithDefaults();
+        if (!cameraDisabled) {
+            aprilTag = AprilTagProcessor.easyCreateWithDefaults();
 
-        visionPortal = VisionPortal.easyCreateWithDefaults(
-                ActiveOpMode.hardwareMap().get(WebcamName.class, "Webcam"), aprilTag);
+
+            visionPortal = VisionPortal.easyCreateWithDefaults(
+                    ActiveOpMode.hardwareMap().get(WebcamName.class, "Webcam"), aprilTag);
+        }
     }
 
     @Override
     public void periodic() {
-        currentDetections = aprilTag.getDetections();
+        if (!cameraDisabled) currentDetections = aprilTag.getDetections();
     }
 
 }
