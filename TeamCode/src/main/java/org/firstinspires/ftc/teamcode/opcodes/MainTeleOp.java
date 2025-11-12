@@ -51,10 +51,10 @@ public class MainTeleOp extends CommandOpMode {
         );
 
         // LEFT_BUMPER controlls the start and stop of the outake
-        controller.getGamepadButton(GamepadKeys.Button.DPAD_UP)
+        controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .whenPressed(robot.toggleIntake());
         // RIGHT_BUMPER controlls the start and stop of the intake
-        controller.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
+        controller.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
                 .whenPressed(robot.toggleOutake());
         // A shoots the green ball
         controller.getGamepadButton(GamepadKeys.Button.A)

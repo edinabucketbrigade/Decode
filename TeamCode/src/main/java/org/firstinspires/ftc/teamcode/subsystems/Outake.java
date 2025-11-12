@@ -177,8 +177,8 @@ public class Outake extends SubsystemBase {
     public CommandBase shootGreen() {
 
         return new ConditionalCommand(
-                shootR(),
                 shootL(),
+                shootR(),
                 () -> getRightColor() == ArtifactColor.GREEN
         );
     }
