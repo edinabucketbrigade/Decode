@@ -77,7 +77,7 @@ public class AutoOp1 extends CommandOpMode {
         super.run();
         robot.run();
 
-        telemetry.addData("Pose", "<%d,%d>:%d",
+        telemetry.addData("Pose", "<%f,%f>:%f",
                 follower.getPose().getX(),
                 follower.getPose().getY(),
                 follower.getPose().getHeading());

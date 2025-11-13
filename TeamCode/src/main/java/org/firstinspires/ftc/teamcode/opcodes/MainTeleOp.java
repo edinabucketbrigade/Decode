@@ -7,6 +7,9 @@ import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
+import com.seattlesolvers.solverslib.command.button.Button;
+import com.seattlesolvers.solverslib.command.button.GamepadButton;
+import com.seattlesolvers.solverslib.command.button.Trigger;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 
@@ -23,7 +26,7 @@ public class MainTeleOp extends CommandOpMode {
 
     private BucketRobot robot;
 
-    private boolean disableDrivetrain = false;
+    private boolean disableDrivetrain = true;
     @Override
     public void initialize() {
         telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
@@ -52,10 +55,10 @@ public class MainTeleOp extends CommandOpMode {
 
         // LEFT_BUMPER controlls the start and stop of the outake
         controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
-                .whenPressed(robot.toggleIntake());
+                .toggleWhenPressed(robot.enableIntake(), robot.disableIntake());
         // RIGHT_BUMPER controlls the start and stop of the intake
         controller.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
-                .whenPressed(robot.toggleOutake());
+                .toggleWhenPressed(robot.enableOutake(), robot.disableOutake());
         // A shoots the green ball
         controller.getGamepadButton(GamepadKeys.Button.A)
                 .whenPressed(robot.shootGreen());
@@ -65,6 +68,7 @@ public class MainTeleOp extends CommandOpMode {
         // X shoots the collum with a ball in it (shoots loaded)
         controller.getGamepadButton(GamepadKeys.Button.X)
                 .whenPressed(robot.shootLoaded());
+
     }
 
     @Override
@@ -78,7 +82,7 @@ public class MainTeleOp extends CommandOpMode {
             follower.update();
             follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
 
-            telemetry.addData("Pose", "<%d,%d>:%d",
+            telemetry.addData("Pose", "<%f,%f>:%f",
                     follower.getPose().getX(),
                     follower.getPose().getY(),
                     follower.getPose().getHeading());

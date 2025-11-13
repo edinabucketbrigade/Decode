@@ -37,7 +37,7 @@ public class Outake extends SubsystemBase {
     public static double resetPosition = 0.4;
     public static double triggerPosition = 1.0;
     public static long triggerDelay = 150;
-    public boolean isRunning;
+    private double setSpeed = 0;
 
     public enum ArtifactColor {
         GREEN,
@@ -58,7 +58,6 @@ public class Outake extends SubsystemBase {
         flywheel.setInverted(true);
         flywheel.setVeloCoefficients(kP, 0, 0);
         flywheel.setFeedforwardCoefficients(kS, kV, kA);
-        isRunning = false;
 
         triggerL = new ServoEx(hardwareMap, "Servo_Left", 0, 1);
         triggerR = new ServoEx(hardwareMap, "Servo_Right", 0, 1);
@@ -83,9 +82,18 @@ public class Outake extends SubsystemBase {
                 rightSensor.red(), rightSensor.blue(), rightSensor.green());
 
         if (flywheel != null)
-            telemetry.addData("Outake velocity", "%f - %f",
+            flywheel.set(setSpeed);
+            telemetry.addData("Outake velocity", "%f (%f) -> %f",
                     flywheel.getVelocity(),
-                    (flywheel.getVelocity() / (speed * maxSpeed)));
+                    (flywheel.getVelocity() / (speed * maxSpeed)),
+                    setSpeed);
+    }
+    public void StartOutake() {
+        setSpeed = speed * maxSpeed;
+    }
+
+    public void StopOutake() {
+        setSpeed = 0;
     }
 
     private ArtifactColor getLeftColor() {
@@ -108,14 +116,6 @@ public class Outake extends SubsystemBase {
         return ArtifactColor.NOTHING;
     }
 
-    public void StartOutake() {
-        flywheel.setVelocity(speed * maxSpeed);
-    }
-
-
-    public void StopOutake() {
-        flywheel.set(0);
-    }
 
 
     public void SettriggerL(double position) {
@@ -183,15 +183,5 @@ public class Outake extends SubsystemBase {
         );
     }
 
-    public void ToggleOutake() {
-        if (!isRunning) {
-            isRunning = true;
-            StartOutake();
-        } else {
-            isRunning = false;
-            StopOutake();
-
-        }
-    }
 }
 

@@ -22,7 +22,6 @@ public class Intake extends SubsystemBase {
 
     public static double speed = 1.0;
 
-    public boolean isRunning;
     private Telemetry telemetry;
     private double setSpeed = 0;
 
@@ -35,33 +34,21 @@ public class Intake extends SubsystemBase {
         flywheel.setRunMode(Motor.RunMode.VelocityControl);
         flywheel.setVeloCoefficients(kP, 0, 0);
         flywheel.setFeedforwardCoefficients(kS, kV, kA);
-        isRunning = false;
     }
 
     public void StartIntake() {
         setSpeed = speed * maxSpeed;
-        flywheel.setVelocity(setSpeed);
-
     }
 
     public void StopIntake() {
-        setSpeed = 0; flywheel.set(setSpeed);
-    }
-
-    public void ToggleIntake() {
-        if (!isRunning) {
-            isRunning = true;
-            StartIntake();
-        } else {
-            isRunning = false;
-            StopIntake();
-        }
+        setSpeed = 0;
     }
 
 
     @Override
     public void periodic() {
         if (flywheel != null)
+            flywheel.set(setSpeed);
             telemetry.addData("Intake velocity", "%f (%f) -> %f",
                     flywheel.getVelocity(),
                     (flywheel.getVelocity() / (speed * maxSpeed)),
