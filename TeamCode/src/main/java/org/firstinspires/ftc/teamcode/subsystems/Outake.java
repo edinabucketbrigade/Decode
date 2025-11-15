@@ -26,12 +26,12 @@ public class Outake extends SubsystemBase {
     private ServoEx triggerR;
     private SensorColor leftSensor;
     private SensorColor rightSensor;
-    private double maxSpeed;
+    public static double maxSpeed = 2140;
 
     public static double kP = 0.001;
-    public static double kS = 0.0;
-    public static double kV = 1.0;
-    public static double kA = 0.0;
+    public static double kI = 0.0;
+    public static double kV = 1.3;
+    public static double kD = 0.0;
     public static double speed = 1.0;
 
     public static double resetPosition = 0.4;
@@ -46,18 +46,18 @@ public class Outake extends SubsystemBase {
     }
 
 
-    private final static boolean disableSensors = false;
+    private final static boolean disableSensors = true
+            ;
     private Telemetry telemetry;
     public Outake(HardwareMap hardwareMap, Telemetry t){
         telemetry = t;
         flywheel = new MotorEx(hardwareMap, "flywheel_outake", Motor.GoBILDA.BARE);
         flywheel.setBuffer(1.0);
-        maxSpeed = flywheel.ACHIEVABLE_MAX_TICKS_PER_SECOND;
         flywheel.setRunMode(Motor.RunMode.VelocityControl);
-        flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         flywheel.setInverted(true);
-        flywheel.setVeloCoefficients(kP, 0, 0);
-        flywheel.setFeedforwardCoefficients(kS, kV, kA);
+        flywheel.setVeloCoefficients(kP, kI, kD);
+        flywheel.setFeedforwardCoefficients(0, kV, 0);
 
         triggerL = new ServoEx(hardwareMap, "Servo_Left", 0, 1);
         triggerR = new ServoEx(hardwareMap, "Servo_Right", 0, 1);
@@ -81,15 +81,17 @@ public class Outake extends SubsystemBase {
         if (rightSensor != null) telemetry.addData("Right Sensor", "%d-%d-%d",
                 rightSensor.red(), rightSensor.blue(), rightSensor.green());
 
-        if (flywheel != null)
-            flywheel.set(setSpeed);
-            telemetry.addData("Outake velocity", "%f (%f) -> %f",
+        if (flywheel != null) {
+            flywheel.setVelocity(setSpeed);
+            telemetry.addData("Outake velocity CPR", "%f (%f%%) -> %f",
                     flywheel.getVelocity(),
-                    (flywheel.getVelocity() / (speed * maxSpeed)),
+                    (flywheel.getVelocity() / setSpeed*100),
                     setSpeed);
+
+        }
     }
     public void StartOutake() {
-        setSpeed = speed * maxSpeed;
+        setSpeed = speed*maxSpeed;
     }
 
     public void StopOutake() {
@@ -128,7 +130,7 @@ public class Outake extends SubsystemBase {
 
     public final Command waitUntilFast() {
         return new WaitUntilCommand(() ->
-                (flywheel.getVelocity() / (speed * maxSpeed)) > 0.95
+                (flywheel.getVelocity() /setSpeed) > 0.90
         );
 
     }

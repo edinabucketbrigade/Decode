@@ -35,7 +35,7 @@ public class Camera extends SubsystemBase  {
         aprilTag = AprilTagProcessor.easyCreateWithDefaults();
 
         visionPortal = VisionPortal.easyCreateWithDefaults(
-                hMap.get(WebcamName.class, "Webcam"), aprilTag);
+                hMap.get(WebcamName.class, "Webcam 1"), aprilTag);
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.pedropathing.follower.Follower;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.button.Button;
 import com.seattlesolvers.solverslib.command.button.GamepadButton;
 import com.seattlesolvers.solverslib.command.button.Trigger;
@@ -26,7 +27,9 @@ public class MainTeleOp extends CommandOpMode {
 
     private BucketRobot robot;
 
-    private boolean disableDrivetrain = true;
+    Trigger left_trigger, right_trigger;
+
+    private boolean disableDrivetrain = false;
     @Override
     public void initialize() {
         telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
@@ -44,6 +47,14 @@ public class MainTeleOp extends CommandOpMode {
         hubs = hardwareMap.getAll(LynxModule.class);
         hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
 
+        new Trigger(() -> controller.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.4).whenActive(
+                new InstantCommand(() -> robot.shootLeft())
+        );
+        new Trigger(() -> controller.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.4).whenActive(
+                new InstantCommand(() -> robot.shootRight())
+        );
+
+        /*
         // DPAD_LEFT and resets left servo
         controller.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
                 robot.shootLeft()
@@ -52,6 +63,7 @@ public class MainTeleOp extends CommandOpMode {
         controller.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
                 robot.shootRight()
         );
+        */
 
         // LEFT_BUMPER controlls the start and stop of the outake
         controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)

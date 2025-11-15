@@ -14,13 +14,13 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 @Configurable
 public class Intake extends SubsystemBase {
     private MotorEx flywheel;
-    private double maxSpeed;
-    public static double kP = 0.001;
-    public static double kS = 0.0;
+    public static double maxSpeed = Motor.GoBILDA.RPM_1150.getAchievableMaxTicksPerSecond();
+    public static double kP = 0.1;
+    public static double kI = 0.0;
     public static double kV = 1.0;
-    public static double kA = 0.0;
+    public static double kD = 0.0;
 
-    public static double speed = 1.0;
+    public static double speed = Motor.GoBILDA.RPM_1150.getAchievableMaxTicksPerSecond();
 
     private Telemetry telemetry;
     private double setSpeed = 0;
@@ -30,14 +30,14 @@ public class Intake extends SubsystemBase {
 
         flywheel = new MotorEx(hardwareMap, "flywheel_intake", Motor.GoBILDA.RPM_1150);
         flywheel.setBuffer(1.0);
-        maxSpeed = flywheel.ACHIEVABLE_MAX_TICKS_PER_SECOND;
+        flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         flywheel.setRunMode(Motor.RunMode.VelocityControl);
-        flywheel.setVeloCoefficients(kP, 0, 0);
-        flywheel.setFeedforwardCoefficients(kS, kV, kA);
+        flywheel.setVeloCoefficients(kP, kI, kD);
+        flywheel.setFeedforwardCoefficients(0, kV, 0);
     }
 
     public void StartIntake() {
-        setSpeed = speed * maxSpeed;
+        setSpeed = maxSpeed;
     }
 
     public void StopIntake() {
@@ -47,11 +47,12 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (flywheel != null)
-            flywheel.set(setSpeed);
-            telemetry.addData("Intake velocity", "%f (%f) -> %f",
+        if (flywheel != null) {
+            flywheel.setVelocity(setSpeed);
+            telemetry.addData("Intake velocity CPR", "%f (%f%%) -> %f",
                     flywheel.getVelocity(),
-                    (flywheel.getVelocity() / (speed * maxSpeed)),
+                    (flywheel.getVelocity() / setSpeed*100),
                     setSpeed);
+        }
     }
 }
