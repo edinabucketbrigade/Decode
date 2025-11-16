@@ -33,7 +33,7 @@ public class AutoOp1 extends CommandOpMode {
         telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
         super.reset();
 
-        robot = new BucketRobot(hardwareMap, telemetry);
+        robot = new BucketRobot(hardwareMap, telemetry, follower);
 
         // Initialize follower
         follower = Constants.createFollower(hardwareMap);

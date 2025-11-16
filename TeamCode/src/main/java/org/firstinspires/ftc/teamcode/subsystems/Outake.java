@@ -3,6 +3,9 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
@@ -18,6 +21,7 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Configurable
 public class Outake extends SubsystemBase {
@@ -34,10 +38,16 @@ public class Outake extends SubsystemBase {
     public static double kD = 0.0;
     public static double speed = 1.0;
 
+    public static long targetGreen = 400;
+    public static long targetBlue = 300;
+    public static long targetRed = 200;
+
     public static double resetPosition = 0.4;
     public static double triggerPosition = 1.0;
     public static long triggerDelay = 150;
     private double setSpeed = 0;
+
+    private boolean enableFlywheel = false;
 
     public enum ArtifactColor {
         GREEN,
@@ -46,10 +56,10 @@ public class Outake extends SubsystemBase {
     }
 
 
-    private final static boolean disableSensors = true
-            ;
+    private final static boolean disableSensors = true;
     private Telemetry telemetry;
-    public Outake(HardwareMap hardwareMap, Telemetry t){
+
+    public Outake(HardwareMap hardwareMap, Telemetry t) {
         telemetry = t;
         flywheel = new MotorEx(hardwareMap, "flywheel_outake", Motor.GoBILDA.BARE);
         flywheel.setBuffer(1.0);
@@ -65,59 +75,83 @@ public class Outake extends SubsystemBase {
         triggerL.set(resetPosition);
         triggerR.set(resetPosition);
 
-        if (!disableSensors) {
-            leftSensor = new SensorColor(hardwareMap, "Sensor_Left");
-            rightSensor = new SensorColor(hardwareMap, "Sensor_Right");
-        }
+        leftSensor = new SensorColor(hardwareMap, "Sensor_Left");
+        rightSensor = new SensorColor(hardwareMap, "Sensor_Right");
+
     }
 
 
     @Override
     public void periodic() {
 
-        if (leftSensor != null) telemetry.addData("Left Sensor", "%d-%d-%d",
-                leftSensor.red(), leftSensor.blue(), leftSensor.green());
 
-        if (rightSensor != null) telemetry.addData("Right Sensor", "%d-%d-%d",
-                rightSensor.red(), rightSensor.blue(), rightSensor.green());
+        if (leftSensor != null) telemetry.addData("Left Sensor", "%s (%d-%d-%d)",
+                getLeftColor().name(), leftSensor.red(), leftSensor.blue(), leftSensor.green());
+
+
+        if (rightSensor != null) telemetry.addData("Right Sensor", "%s (%d-%d-%d)",
+                getRightColor().name(), rightSensor.red(), rightSensor.blue(), rightSensor.green());
 
         if (flywheel != null) {
-            flywheel.setVelocity(setSpeed);
-            telemetry.addData("Outake velocity CPR", "%f (%f%%) -> %f",
+            setSpeed = speed * maxSpeed;
+            if (enableFlywheel)
+                flywheel.setVelocity(setSpeed);
+            else
+                flywheel.setVelocity(0);
+
+            telemetry.addData("Outake velocity", "%f (%f%%) -> %f",
                     flywheel.getVelocity(),
-                    (flywheel.getVelocity() / setSpeed*100),
+                    (flywheel.getVelocity() / setSpeed * 100),
                     setSpeed);
+            telemetry.addData("Speed", speed);
 
         }
     }
+
     public void StartOutake() {
-        setSpeed = speed*maxSpeed;
+        enableFlywheel = true;
     }
 
     public void StopOutake() {
-        setSpeed = 0;
+        enableFlywheel = false;
     }
 
     private ArtifactColor getLeftColor() {
         if (disableSensors) return ArtifactColor.GREEN;
-        if (leftSensor.green() > 150)
-            return ArtifactColor.GREEN;
-        if (leftSensor.red() > 150 && leftSensor.blue() > 150)
+        if (leftSensor instanceof DistanceSensor) {
+            if (((DistanceSensor) leftSensor).getDistance(DistanceUnit.CM) > 7.0)
+                return ArtifactColor.NOTHING;
+            if (leftSensor.green() > leftSensor.blue())
+                return ArtifactColor.GREEN;
             return ArtifactColor.PURPLE;
+        } else {
+            if (leftSensor.green() > targetGreen)
+                return ArtifactColor.GREEN;
+            if (rightSensor.red() > targetRed && rightSensor.blue() > targetBlue)
+                return ArtifactColor.PURPLE;
 
-        return ArtifactColor.NOTHING;
+            return ArtifactColor.NOTHING;
+        }
     }
 
     private ArtifactColor getRightColor() {
         if (disableSensors) return ArtifactColor.GREEN;
-        if (rightSensor.green() > 150)
-            return ArtifactColor.GREEN;
-        if (rightSensor.red() > 150 && rightSensor.blue() > 150)
+        if (rightSensor instanceof DistanceSensor) {
+            if (((DistanceSensor) rightSensor).getDistance(DistanceUnit.CM) > 7.0)
+                return ArtifactColor.NOTHING;
+            if (rightSensor.green() > rightSensor.blue())
+                return ArtifactColor.GREEN;
             return ArtifactColor.PURPLE;
+        } else {
+            if (rightSensor.green() > targetGreen)
+                return ArtifactColor.GREEN;
 
-        return ArtifactColor.NOTHING;
+            if (rightSensor.red() > targetRed && rightSensor.blue() > targetBlue)
+                return ArtifactColor.PURPLE;
+
+            return ArtifactColor.NOTHING;
+        }
     }
-
 
 
     public void SettriggerL(double position) {
@@ -130,14 +164,14 @@ public class Outake extends SubsystemBase {
 
     public final Command waitUntilFast() {
         return new WaitUntilCommand(() ->
-                (flywheel.getVelocity() /setSpeed) > 0.90
+                (flywheel.getVelocity() / setSpeed) > 0.90
         );
 
     }
 
     public CommandBase shootL() {
         return new SequentialCommandGroup(
-                waitUntilFast(),
+                //waitUntilFast(),
                 new InstantCommand(() -> SettriggerL(triggerPosition)),
                 new WaitCommand(triggerDelay),
                 new InstantCommand(() -> SettriggerL(resetPosition))
@@ -147,7 +181,7 @@ public class Outake extends SubsystemBase {
 
     public CommandBase shootR() {
         return new SequentialCommandGroup(
-                waitUntilFast(),
+                //waitUntilFast(),
                 new InstantCommand(() -> SettriggerR(triggerPosition)),
                 new WaitCommand(triggerDelay),
                 new InstantCommand(() -> SettriggerR(resetPosition))

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
@@ -9,8 +10,11 @@ import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.command.SelectCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
+import com.seattlesolvers.solverslib.command.button.Trigger;
+import com.seattlesolvers.solverslib.purepursuit.actions.TriggeredAction;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.security.spec.PSSParameterSpec;
@@ -45,11 +49,13 @@ public class BucketRobot extends Robot {
 
     private static boolean disableCamera = false;
     private Telemetry telemetry;
-    public BucketRobot(HardwareMap hMap, Telemetry t){
-        this(hMap,t,false);
+    private Follower follower;
+    public BucketRobot(HardwareMap hMap, Telemetry t, Follower f){
+        this(hMap,t,f,false);
     }
-    public BucketRobot(HardwareMap hMap, Telemetry t, boolean redAlliance){
+    public BucketRobot(HardwareMap hMap, Telemetry t, Follower f, boolean redAlliance){
         telemetry = t;
+        follower = f;
         outake = new Outake(hMap, t);
         intake = new Intake(hMap, t);
         if (!disableCamera) {
@@ -60,6 +66,7 @@ public class BucketRobot extends Robot {
 
         pattern = ARTIFACTPATTERN.NONE;
         target = redAlliance? new Pose(144,144): new Pose(0,0);
+
     }
     public Command enableIntake() {
         return new InstantCommand(() -> intake.StartIntake());
@@ -125,6 +132,15 @@ public class BucketRobot extends Robot {
 
     @Override
     public void run() {
+        //adjust power to hit goal
+        double currentY = follower.getPose().getY();
+        if (currentY > 72 && currentY < 100)
+            Outake.speed = .7;
+        else if (currentY >= 100)
+            Outake.speed = .55;
+        else
+            Outake.speed = .85;
+
         if (camera != null && pattern == ARTIFACTPATTERN.NONE){
             for (AprilTagDetection detection : camera.currentDetections) {
                 if (detection.id == ARTIFACTPATTERN.GPP.getPattern()) {

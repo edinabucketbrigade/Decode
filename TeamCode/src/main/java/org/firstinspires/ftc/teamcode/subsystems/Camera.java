@@ -41,7 +41,6 @@ public class Camera extends SubsystemBase  {
     @Override
     public void periodic() {
         currentDetections = aprilTag.getDetections();
-
     }
 
 }

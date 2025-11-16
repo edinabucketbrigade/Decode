@@ -48,11 +48,13 @@ public class Intake extends SubsystemBase {
     @Override
     public void periodic() {
         if (flywheel != null) {
-            flywheel.setVelocity(setSpeed);
-            telemetry.addData("Intake velocity CPR", "%f (%f%%) -> %f",
-                    flywheel.getVelocity(),
-                    (flywheel.getVelocity() / setSpeed*100),
-                    setSpeed);
+            //if the flywheel is stuck reverse for a bit and try again
+            if (setSpeed > 0 && flywheel.getVelocity() < 1)
+                flywheel.setVelocity(-10.0);
+            else if (setSpeed < 0 && flywheel.get() < -5.0)
+                flywheel.setVelocity(-10.0);
+            else
+                flywheel.setVelocity(setSpeed);
         }
     }
 }
