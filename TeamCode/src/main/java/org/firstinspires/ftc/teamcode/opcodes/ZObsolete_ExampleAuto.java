@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Disabled
 @Autonomous(name = "Example Auto", group = "Examples")
-public abstract class Obsolete_ExampleAuto extends OpMode {
+public abstract class ZObsolete_ExampleAuto extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private int pathState;

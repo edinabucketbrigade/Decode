@@ -19,7 +19,7 @@ import java.util.List;
 
 
 @Autonomous(name = "AutoOp1", group = "Auto")
-public class AutoOp1 extends CommandOpMode {
+public class ZObsolete_AutoOp1 extends CommandOpMode {
     private Follower follower;
 
     private autoPath1 autoPath;

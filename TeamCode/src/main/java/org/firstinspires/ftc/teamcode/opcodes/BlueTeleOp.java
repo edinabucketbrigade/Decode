@@ -10,8 +10,6 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.button.Button;
-import com.seattlesolvers.solverslib.command.button.GamepadButton;
 import com.seattlesolvers.solverslib.command.button.Trigger;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
@@ -22,32 +20,43 @@ import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
 import java.util.List;
 
 @Configurable
-@TeleOp(name = "MainTeleOp", group = "TeleOp")
-public class MainTeleOp extends CommandOpMode {
+@TeleOp(name = "BlueTeleOp", group = "TeleOp")
+public class BlueTeleOp extends CommandOpMode {
     private GamepadEx controller;
     private Follower follower;
     private List<LynxModule> hubs;
 
     private BucketRobot robot;
 
-    public static Pose starting = new Pose(56.000, 8.000, Math.toRadians(90.0));
     Trigger left_trigger, right_trigger;
 
-    private boolean disableDrivetrain = false;
+    public BlueTeleOp(boolean isBlueAlliance) {
+        BucketRobot.blueAlliance = isBlueAlliance;
+    }
+    public BlueTeleOp() {
+        this(true);
+    }
+
+
     @Override
     public void initialize() {
         telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
         super.reset();
 
-        if (!disableDrivetrain) {
-            follower = Constants.createFollower(hardwareMap);
-            follower.setStartingPose(starting);
+        follower = Constants.createFollower(hardwareMap);
 
-            follower.update();
-            follower.startTeleopDrive();
-        }
+        //set starting position to far shooting zone or keep the position from auto
+        if (BucketRobot.currentPos == null)
+            follower.setStartingPose(BucketRobot.createPose(56, 8.5, Math.toRadians(90)));
+        else
+            follower.setStartingPose(BucketRobot.currentPos);
 
         robot = new BucketRobot(hardwareMap, telemetry, follower);
+
+
+        follower.update();
+        follower.startTeleopDrive();
+
         controller = new GamepadEx(gamepad1);
 
         hubs = hardwareMap.getAll(LynxModule.class);
@@ -96,15 +105,9 @@ public class MainTeleOp extends CommandOpMode {
         super.run();
         robot.run();
 
-        if (!disableDrivetrain) {
-            follower.update();
-            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
 
-            telemetry.addData("Pose", "<%f,%f>:%f",
-                    follower.getPose().getX(),
-                    follower.getPose().getY(),
-                    Math.toDegrees(follower.getPose().getHeading()));
-        }
+        follower.update();
+        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
 
         telemetry.update();
     }

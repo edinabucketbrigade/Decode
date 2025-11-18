@@ -27,7 +27,10 @@ public class BucketRobot extends Robot {
     private Outake outake;
     private Camera camera;
 
-    private Pose target;
+    public static boolean blueAlliance;
+
+    //store latest robot position in auto to use in tele
+    public static Pose currentPos = null;
 
     public enum ARTIFACTPATTERN {
         NONE(0),
@@ -45,17 +48,15 @@ public class BucketRobot extends Robot {
         }
     };
 
-    ARTIFACTPATTERN pattern;
+    static ARTIFACTPATTERN pattern = ARTIFACTPATTERN.NONE;
 
     private static boolean disableCamera = false;
     private Telemetry telemetry;
     private Follower follower;
     public BucketRobot(HardwareMap hMap, Telemetry t, Follower f){
-        this(hMap,t,f,false);
-    }
-    public BucketRobot(HardwareMap hMap, Telemetry t, Follower f, boolean redAlliance){
         telemetry = t;
         follower = f;
+
         outake = new Outake(hMap, t);
         intake = new Intake(hMap, t);
         if (!disableCamera) {
@@ -65,7 +66,7 @@ public class BucketRobot extends Robot {
             register(outake, intake);
 
         pattern = ARTIFACTPATTERN.NONE;
-        target = redAlliance? new Pose(144,144): new Pose(0,0);
+
 
     }
     public Command enableIntake() {
@@ -132,6 +133,14 @@ public class BucketRobot extends Robot {
 
     @Override
     public void run() {
+        currentPos = follower.getPose();
+
+        telemetry.addData("Pose", "<%f,%f>:%f",
+                currentPos.getX(),
+                currentPos.getY(),
+                Math.toDegrees(currentPos.getHeading()));
+
+
         //adjust power to hit goal
         double currentY = follower.getPose().getY();
         if (currentY > 72 && currentY < 100)
@@ -158,4 +167,20 @@ public class BucketRobot extends Robot {
 
         super.run();
     }
+
+    public static Pose createPose(double x, double y, double heading)
+    {
+        if (blueAlliance)
+            return new Pose(x,y,heading);
+        else
+            return new Pose(x,y,heading).mirror();
+    }
+
+    public static Pose createPose(double x, double y) {
+        if (blueAlliance)
+            return new Pose(x,y);
+        else
+            return new Pose(x,y).mirror();
+    }
+
 }

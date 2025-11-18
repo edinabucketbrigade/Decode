@@ -1,0 +1,185 @@
+package org.firstinspires.ftc.teamcode.opcodes;
+
+import com.bylazar.telemetry.JoinedTelemetry;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.HeadingInterpolator;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
+import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.seattlesolvers.solverslib.command.Command;
+import com.seattlesolvers.solverslib.command.CommandOpMode;
+import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
+import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
+import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
+
+import java.util.List;
+
+@Autonomous(name = "BlueFarAuto", group = "Auto")
+public class FarAuto extends CommandOpMode {
+    public Follower follower;
+    public BucketRobot robot;
+    public List<LynxModule> hubs;
+
+
+    //Positions
+    public Pose startingPos;
+    public Pose patternPos1;
+    public Pose patternPos2;
+    public Pose patternPos3;
+    public Pose shootingFarPos;
+    public Pose shootingNearPos;
+    public Pose targetPos;
+
+    //Paths
+    public PathChain ShootLoaded;
+    public PathChain CollectPattern1;
+    public PathChain CollectPattern2;
+    public PathChain CollectPattern3;
+    public PathChain ShootCollected1;
+    public PathChain ShootCollected2;
+    public PathChain ShootCollected3;
+
+    public FarAuto(boolean isBlueAlliance) {
+        BucketRobot.blueAlliance = isBlueAlliance;
+    }
+
+    public FarAuto() {
+        this(true);
+    }
+
+    @Override
+    public void initialize() {
+        telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
+        super.reset();
+
+        //setup Positions
+        startingPos = BucketRobot.createPose(56, 8.5, Math.toRadians(90));
+        targetPos = BucketRobot.createPose(8, 136);
+
+        patternPos1 = BucketRobot.createPose(19, 84, Math.toRadians(180));
+        patternPos2 = BucketRobot.createPose(19, 60, Math.toRadians(180));
+        patternPos3 = BucketRobot.createPose(19, 36, Math.toRadians(180));
+
+        shootingFarPos = BucketRobot.createPose(56, 13);
+        shootingNearPos = BucketRobot.createPose(50, 84);
+
+
+        // Initialize follower
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPos);
+        robot = new BucketRobot(hardwareMap, telemetry, follower);
+        follower.update();
+
+        hubs = hardwareMap.getAll(LynxModule.class);
+        hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
+
+
+        //create Paths
+        ShootLoaded = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(startingPos, shootingFarPos)
+                )
+                .setHeadingInterpolation(HeadingInterpolator.facingPoint(targetPos))
+                .build();
+        CollectPattern1 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                shootingFarPos,
+                                BucketRobot.createPose(shootingFarPos.getX(), patternPos1.getY()),
+                                patternPos1
+                        )
+                )
+                // from sample https://pedropathing.com/docs/pathing/examples/teleop
+                .setHeadingInterpolation(
+                        HeadingInterpolator.linearFromPoint(
+                                follower::getHeading,
+                                patternPos1.getHeading(),
+                                0.8
+                        )
+                )
+                .build();
+        ShootCollected1 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(patternPos1, shootingNearPos)
+                )
+                .setHeadingInterpolation(HeadingInterpolator.facingPoint(targetPos))
+                .build();
+        CollectPattern2 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                shootingNearPos,
+                                BucketRobot.createPose(shootingFarPos.getX(), patternPos2.getY()),
+                                patternPos2
+                        )
+                )
+                // from sample https://pedropathing.com/docs/pathing/examples/teleop
+                .setHeadingInterpolation(
+                        HeadingInterpolator.linearFromPoint(
+                                follower::getHeading,
+                                patternPos2.getHeading(),
+                                0.8
+                        )
+                )
+                .build();
+        ShootCollected2 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(patternPos2, shootingNearPos)
+                )
+                .setHeadingInterpolation(HeadingInterpolator.facingPoint(targetPos))
+                .build();
+        CollectPattern3 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                shootingNearPos,
+                                BucketRobot.createPose(shootingFarPos.getX(), patternPos3.getY()),
+                                patternPos3
+                        )
+                )
+                // from sample https://pedropathing.com/docs/pathing/examples/teleop
+                .setHeadingInterpolation(
+                        HeadingInterpolator.linearFromPoint(
+                                follower::getHeading,
+                                patternPos3.getHeading(),
+                                0.8
+                        )
+                )
+                .build();
+        ShootCollected3 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(patternPos3, shootingFarPos)
+                )
+                .setHeadingInterpolation(HeadingInterpolator.facingPoint(targetPos))
+                .build();
+
+        // Create auto sequence
+        Command auto = new SequentialCommandGroup(
+
+
+        );
+        auto.schedule();
+    }
+
+    @Override
+    public void run() {
+        hubs.forEach(LynxModule::clearBulkCache);
+        super.run();
+        robot.run();
+
+        telemetry.update();
+    }
+}

@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Disabled
 @TeleOp(name = "BasePedroTeleOp", group = "TeleOp")
-public class Obsolete_BasePedroTeleOp extends OpMode {
+public class ZObsolete_BasePedroTeleOp extends OpMode {
     private Follower follower;
     private TelemetryManager telemetryM;
 
