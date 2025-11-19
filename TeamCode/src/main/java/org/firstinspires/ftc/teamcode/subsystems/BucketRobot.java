@@ -3,21 +3,18 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
+import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.command.SelectCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
-import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.button.Trigger;
-import com.seattlesolvers.solverslib.purepursuit.actions.TriggeredAction;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
-import java.security.spec.PSSParameterSpec;
 import java.util.HashMap;
 
 
@@ -39,14 +36,14 @@ public class BucketRobot extends Robot {
         PPG(23);
         private final int pattern;
 
-        private ARTIFACTPATTERN(int pattern) {
+        ARTIFACTPATTERN(int pattern) {
             this.pattern = pattern;
         }
 
         public int getPattern() {
             return pattern;
         }
-    };
+    }
 
     static ARTIFACTPATTERN pattern = ARTIFACTPATTERN.NONE;
 
@@ -56,6 +53,7 @@ public class BucketRobot extends Robot {
     public BucketRobot(HardwareMap hMap, Telemetry t, Follower f){
         telemetry = t;
         follower = f;
+        CommandScheduler.getInstance().setBulkReading(hMap, LynxModule.BulkCachingMode.MANUAL);
 
         outake = new Outake(hMap, t);
         intake = new Intake(hMap, t);
@@ -126,7 +124,7 @@ public class BucketRobot extends Robot {
                     put(ARTIFACTPATTERN.GPP,shootGPP());
                     put(ARTIFACTPATTERN.PGP,shootPGP());
                     put(ARTIFACTPATTERN.PPG,shootPPG());
-                    put(ARTIFACTPATTERN.NONE, new WaitCommand(1));
+                    put(ARTIFACTPATTERN.NONE, shootPGP());
                 }},
                 () -> pattern);
     }
@@ -142,11 +140,11 @@ public class BucketRobot extends Robot {
 
 
         //adjust power to hit goal
-        double currentY = follower.getPose().getY();
-        if (currentY > 72 && currentY < 100)
-            Outake.speed = .7;
-        else if (currentY >= 100)
+        double currentY = currentPos.getY();
+        if (currentY >= 100)
             Outake.speed = .55;
+        else if (currentY > 72)
+            Outake.speed = .7;
         else
             Outake.speed = .85;
 
@@ -165,6 +163,7 @@ public class BucketRobot extends Robot {
             }
         }
 
+        follower.update();
         super.run();
     }
 

@@ -9,6 +9,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
+import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.button.Trigger;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
@@ -24,7 +25,6 @@ import java.util.List;
 public class BlueTeleOp extends CommandOpMode {
     private GamepadEx controller;
     private Follower follower;
-    private List<LynxModule> hubs;
 
     private BucketRobot robot;
 
@@ -33,6 +33,7 @@ public class BlueTeleOp extends CommandOpMode {
     public BlueTeleOp(boolean isBlueAlliance) {
         BucketRobot.blueAlliance = isBlueAlliance;
     }
+
     public BlueTeleOp() {
         this(true);
     }
@@ -51,6 +52,7 @@ public class BlueTeleOp extends CommandOpMode {
         else
             follower.setStartingPose(BucketRobot.currentPos);
 
+
         robot = new BucketRobot(hardwareMap, telemetry, follower);
 
 
@@ -59,26 +61,10 @@ public class BlueTeleOp extends CommandOpMode {
 
         controller = new GamepadEx(gamepad1);
 
-        hubs = hardwareMap.getAll(LynxModule.class);
-        hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
-
-        left_trigger = new Trigger(() -> controller.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.2).whenActive(
-                new InstantCommand(() -> robot.shootLeft())
-        );
-        right_trigger = new Trigger(() -> controller.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.2).whenActive(
-                new InstantCommand(() -> robot.shootRight())
-        );
-
-
-        // DPAD_LEFT and resets left servo
-        controller.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
-                robot.shootLeft()
-        );
-        // DPAD_RIGHT triggers and resets right servo
-        controller.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
-                robot.shootRight()
-        );
-
+        new Trigger(() -> controller.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.2)
+                .whileActiveOnce(robot.shootLeft());
+        new Trigger(() -> controller.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.2)
+                .whileActiveOnce(robot.shootRight());
 
         // LEFT_BUMPER controlls the start and stop of the outake
         controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
@@ -96,17 +82,16 @@ public class BlueTeleOp extends CommandOpMode {
         controller.getGamepadButton(GamepadKeys.Button.X)
                 .whenPressed(robot.shootLoaded());
 
+        controller.getGamepadButton(GamepadKeys.Button.Y)
+                .whenPressed(robot.shootPattern());
+
     }
 
     @Override
     public void run() {
-        hubs.forEach(LynxModule::clearBulkCache);
-
         super.run();
         robot.run();
 
-
-        follower.update();
         follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
 
         telemetry.update();

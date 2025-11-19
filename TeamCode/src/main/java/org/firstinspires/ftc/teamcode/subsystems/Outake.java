@@ -28,8 +28,8 @@ public class Outake extends SubsystemBase {
     private MotorEx flywheel;
     private ServoEx triggerL;
     private ServoEx triggerR;
-    private SensorColor leftSensor;
-    private SensorColor rightSensor;
+    private ColorRangeSensor leftSensor;
+    private ColorRangeSensor rightSensor;
     public static double maxSpeed = 2140;
 
     public static double kP = 0.001;
@@ -55,8 +55,8 @@ public class Outake extends SubsystemBase {
         NOTHING
     }
 
+    public static double distanceToBall = 10.0;
 
-    private final static boolean disableSensors = true;
     private Telemetry telemetry;
 
     public Outake(HardwareMap hardwareMap, Telemetry t) {
@@ -75,22 +75,18 @@ public class Outake extends SubsystemBase {
         triggerL.set(resetPosition);
         triggerR.set(resetPosition);
 
-        leftSensor = new SensorColor(hardwareMap, "Sensor_Left");
-        rightSensor = new SensorColor(hardwareMap, "Sensor_Right");
+
+        leftSensor = hardwareMap.get(ColorRangeSensor.class, "Sensor_Left");
+        rightSensor = hardwareMap.get(ColorRangeSensor.class, "Sensor_Right");
 
     }
 
 
     @Override
     public void periodic() {
+        telemetry.addData("Loaded","%-7s - %-7s", getLeftColor().name(),getRightColor().name());
 
 
-        if (leftSensor != null) telemetry.addData("Left Sensor", "%s (%d-%d-%d)",
-                getLeftColor().name(), leftSensor.red(), leftSensor.blue(), leftSensor.green());
-
-
-        if (rightSensor != null) telemetry.addData("Right Sensor", "%s (%d-%d-%d)",
-                getRightColor().name(), rightSensor.red(), rightSensor.blue(), rightSensor.green());
 
         if (flywheel != null) {
             setSpeed = speed * maxSpeed;
@@ -117,40 +113,21 @@ public class Outake extends SubsystemBase {
     }
 
     private ArtifactColor getLeftColor() {
-        if (disableSensors) return ArtifactColor.GREEN;
-        if (leftSensor instanceof DistanceSensor) {
-            if (((DistanceSensor) leftSensor).getDistance(DistanceUnit.CM) > 7.0)
-                return ArtifactColor.NOTHING;
-            if (leftSensor.green() > leftSensor.blue())
-                return ArtifactColor.GREEN;
-            return ArtifactColor.PURPLE;
-        } else {
-            if (leftSensor.green() > targetGreen)
-                return ArtifactColor.GREEN;
-            if (rightSensor.red() > targetRed && rightSensor.blue() > targetBlue)
-                return ArtifactColor.PURPLE;
-
+        if (leftSensor.getDistance(DistanceUnit.CM) > distanceToBall ||
+                leftSensor.getDistance(DistanceUnit.CM) == DistanceSensor.distanceOutOfRange)
             return ArtifactColor.NOTHING;
-        }
+        if (leftSensor.green() > leftSensor.blue())
+            return ArtifactColor.GREEN;
+        return ArtifactColor.PURPLE;
     }
 
     private ArtifactColor getRightColor() {
-        if (disableSensors) return ArtifactColor.GREEN;
-        if (rightSensor instanceof DistanceSensor) {
-            if (((DistanceSensor) rightSensor).getDistance(DistanceUnit.CM) > 7.0)
-                return ArtifactColor.NOTHING;
-            if (rightSensor.green() > rightSensor.blue())
-                return ArtifactColor.GREEN;
-            return ArtifactColor.PURPLE;
-        } else {
-            if (rightSensor.green() > targetGreen)
-                return ArtifactColor.GREEN;
-
-            if (rightSensor.red() > targetRed && rightSensor.blue() > targetBlue)
-                return ArtifactColor.PURPLE;
-
+        if (rightSensor.getDistance(DistanceUnit.CM) > distanceToBall ||
+                rightSensor.getDistance(DistanceUnit.CM) == DistanceSensor.distanceOutOfRange)
             return ArtifactColor.NOTHING;
-        }
+        if (rightSensor.green() > rightSensor.blue())
+            return ArtifactColor.GREEN;
+        return ArtifactColor.PURPLE;
     }
 
 

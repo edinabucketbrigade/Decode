@@ -19,7 +19,6 @@ import java.util.List;
 public class NearAuto  extends CommandOpMode {
     public Follower follower;
     public BucketRobot robot;
-    public List<LynxModule> hubs;
 
 
 
@@ -59,8 +58,7 @@ public class NearAuto  extends CommandOpMode {
         robot = new BucketRobot(hardwareMap, telemetry, follower);
         follower.update();
 
-        hubs = hardwareMap.getAll(LynxModule.class);
-        hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
+
 
 
         //create Paths
@@ -75,7 +73,6 @@ public class NearAuto  extends CommandOpMode {
 
     @Override
     public void run() {
-        hubs.forEach(LynxModule::clearBulkCache);
         super.run();
         robot.run();
 

@@ -26,7 +26,7 @@ import java.util.List;
 public class FarAuto extends CommandOpMode {
     public Follower follower;
     public BucketRobot robot;
-    public List<LynxModule> hubs;
+
 
 
     //Positions
@@ -37,6 +37,7 @@ public class FarAuto extends CommandOpMode {
     public Pose shootingFarPos;
     public Pose shootingNearPos;
     public Pose targetPos;
+    public Pose endingPos;
 
     //Paths
     public PathChain ShootLoaded;
@@ -46,6 +47,7 @@ public class FarAuto extends CommandOpMode {
     public PathChain ShootCollected1;
     public PathChain ShootCollected2;
     public PathChain ShootCollected3;
+    public PathChain MovetoEnd;
 
     public FarAuto(boolean isBlueAlliance) {
         BucketRobot.blueAlliance = isBlueAlliance;
@@ -55,6 +57,7 @@ public class FarAuto extends CommandOpMode {
         this(true);
     }
 
+    Command auto;
     @Override
     public void initialize() {
         telemetry = new JoinedTelemetry(telemetry, PanelsTelemetry.INSTANCE.getFtcTelemetry());
@@ -68,8 +71,9 @@ public class FarAuto extends CommandOpMode {
         patternPos2 = BucketRobot.createPose(19, 60, Math.toRadians(180));
         patternPos3 = BucketRobot.createPose(19, 36, Math.toRadians(180));
 
-        shootingFarPos = BucketRobot.createPose(56, 13);
+        shootingFarPos = BucketRobot.createPose(56, 11);
         shootingNearPos = BucketRobot.createPose(50, 84);
+        endingPos = BucketRobot.createPose(36,13);
 
 
         // Initialize follower
@@ -77,9 +81,6 @@ public class FarAuto extends CommandOpMode {
         follower.setStartingPose(startingPos);
         robot = new BucketRobot(hardwareMap, telemetry, follower);
         follower.update();
-
-        hubs = hardwareMap.getAll(LynxModule.class);
-        hubs.forEach(hub -> hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL));
 
 
         //create Paths
@@ -165,9 +166,20 @@ public class FarAuto extends CommandOpMode {
                 )
                 .setHeadingInterpolation(HeadingInterpolator.facingPoint(targetPos))
                 .build();
+        MovetoEnd = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(shootingFarPos, endingPos)
+                )
+                .setTangentHeadingInterpolation()
+                .build();
 
         // Create auto sequence
-        Command auto = new SequentialCommandGroup(
+        auto = new SequentialCommandGroup(
+                new FollowPathCommand(follower, ShootLoaded),
+                //        robot.enableOutake(),
+                robot.shootPattern()
+
 
 
         );
@@ -176,7 +188,6 @@ public class FarAuto extends CommandOpMode {
 
     @Override
     public void run() {
-        hubs.forEach(LynxModule::clearBulkCache);
         super.run();
         robot.run();
 
