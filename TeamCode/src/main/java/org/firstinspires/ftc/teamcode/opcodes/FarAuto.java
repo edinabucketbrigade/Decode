@@ -17,6 +17,7 @@ import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 
+import org.firstinspires.ftc.teamcode.auto.AutoPoints;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
 
@@ -26,8 +27,6 @@ import java.util.List;
 public class FarAuto extends CommandOpMode {
     public Follower follower;
     public BucketRobot robot;
-
-
 
     //Positions
     public Pose startingPos;
@@ -64,16 +63,16 @@ public class FarAuto extends CommandOpMode {
         super.reset();
 
         //setup Positions
-        startingPos = BucketRobot.createPose(56, 8.5, Math.toRadians(90));
-        targetPos = BucketRobot.createPose(8, 136);
+        startingPos = BucketRobot.createPose(AutoPoints.startingFarPos);
+        targetPos = BucketRobot.createPose(AutoPoints.targetPos);
 
-        patternPos1 = BucketRobot.createPose(19, 84, Math.toRadians(180));
-        patternPos2 = BucketRobot.createPose(19, 60, Math.toRadians(180));
-        patternPos3 = BucketRobot.createPose(19, 36, Math.toRadians(180));
+        patternPos1 = BucketRobot.createPose(AutoPoints.patternPos1);
+        patternPos2 = BucketRobot.createPose(AutoPoints.patternPos2);
+        patternPos3 = BucketRobot.createPose(AutoPoints.patternPos3);
 
-        shootingFarPos = BucketRobot.createPose(56, 11);
-        shootingNearPos = BucketRobot.createPose(50, 84);
-        endingPos = BucketRobot.createPose(36,13);
+        shootingFarPos = BucketRobot.createPose(AutoPoints.shootingFarPos);
+        shootingNearPos = BucketRobot.createPose(AutoPoints.shootingNearPos);
+        endingPos = BucketRobot.createPose(AutoPoints.endingFarPos);
 
 
         // Initialize follower

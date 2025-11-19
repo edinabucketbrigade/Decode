@@ -14,6 +14,7 @@ import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.button.Trigger;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
+import com.seattlesolvers.solverslib.gamepad.ToggleButtonReader;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
@@ -28,8 +29,6 @@ public class BlueTeleOp extends CommandOpMode {
 
     private BucketRobot robot;
 
-    Trigger left_trigger, right_trigger;
-
     public BlueTeleOp(boolean isBlueAlliance) {
         BucketRobot.blueAlliance = isBlueAlliance;
     }
@@ -38,6 +37,7 @@ public class BlueTeleOp extends CommandOpMode {
         this(true);
     }
 
+    ToggleButtonReader slowMode, fixedOutake;
 
     @Override
     public void initialize() {
@@ -85,15 +85,27 @@ public class BlueTeleOp extends CommandOpMode {
         controller.getGamepadButton(GamepadKeys.Button.Y)
                 .whenPressed(robot.shootPattern());
 
+        slowMode = new ToggleButtonReader(
+                controller, GamepadKeys.Button.DPAD_DOWN
+        );
+        fixedOutake = new ToggleButtonReader(
+                controller, GamepadKeys.Button.DPAD_UP
+        );
     }
 
     @Override
     public void run() {
         super.run();
         robot.run();
+        if (slowMode.getState())
+            follower.setTeleOpDrive(-gamepad1.left_stick_y/2, -gamepad1.left_stick_x/2, -gamepad1.right_stick_x/2, true);
+        else
+            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
 
-        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
+        robot.fixedSpeed = fixedOutake.getState();
 
+        fixedOutake.readValue();
+        slowMode.readValue();
         telemetry.update();
     }
 }

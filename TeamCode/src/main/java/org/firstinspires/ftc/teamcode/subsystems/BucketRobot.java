@@ -29,6 +29,8 @@ public class BucketRobot extends Robot {
     //store latest robot position in auto to use in tele
     public static Pose currentPos = null;
 
+    public boolean fixedSpeed = false;
+
     public enum ARTIFACTPATTERN {
         NONE(0),
         GPP(21),
@@ -129,6 +131,20 @@ public class BucketRobot extends Robot {
                 () -> pattern);
     }
 
+    private void setFlywheelSpeed()
+    {
+        if (fixedSpeed)
+            Outake.speed = 0.7;
+        else {
+            double currentY = currentPos.getY();
+            if (currentY >= 100)
+                Outake.speed = .55;
+            else if (currentY > 72)
+                Outake.speed = .7;
+            else
+                Outake.speed = .85;
+        }
+    }
     @Override
     public void run() {
         currentPos = follower.getPose();
@@ -140,13 +156,7 @@ public class BucketRobot extends Robot {
 
 
         //adjust power to hit goal
-        double currentY = currentPos.getY();
-        if (currentY >= 100)
-            Outake.speed = .55;
-        else if (currentY > 72)
-            Outake.speed = .7;
-        else
-            Outake.speed = .85;
+        setFlywheelSpeed();
 
         if (camera != null && pattern == ARTIFACTPATTERN.NONE){
             for (AprilTagDetection detection : camera.currentDetections) {
@@ -180,6 +190,14 @@ public class BucketRobot extends Robot {
             return new Pose(x,y);
         else
             return new Pose(x,y).mirror();
+    }
+
+    public static Pose createPose(double[] pos) {
+        if (pos.length == 2)
+            return createPose(pos[0],pos[1]);
+        if (pos.length == 3)
+            return createPose(pos[0],pos[1], Math.toRadians(pos[2]));
+        return null;
     }
 
 }
