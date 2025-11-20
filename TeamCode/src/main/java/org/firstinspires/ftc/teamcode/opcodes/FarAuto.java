@@ -176,12 +176,22 @@ public class FarAuto extends CommandOpMode {
         // Create auto sequence
         auto = new SequentialCommandGroup(
                 new FollowPathCommand(follower, ShootLoaded),
-                //        robot.enableOutake(),
-                robot.shootPattern()
+                robot.startAndShootPattern(),
 
+                robot.enableIntake(),
 
+                new FollowPathCommand(follower, CollectPattern1),
+                robot.startAndShootPattern(),
 
-        );
+                new FollowPathCommand(follower, CollectPattern2),
+                robot.startAndShootPattern(),
+
+                new FollowPathCommand(follower, CollectPattern3),
+                robot.startAndShootPattern(),
+
+                robot.disableIntake(),
+                new FollowPathCommand(follower, MovetoEnd)
+                );
         auto.schedule();
     }
 

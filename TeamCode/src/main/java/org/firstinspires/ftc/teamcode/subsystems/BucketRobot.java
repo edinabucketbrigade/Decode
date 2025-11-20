@@ -52,7 +52,8 @@ public class BucketRobot extends Robot {
     private static boolean disableCamera = false;
     private Telemetry telemetry;
     private Follower follower;
-    public BucketRobot(HardwareMap hMap, Telemetry t, Follower f){
+
+    public BucketRobot(HardwareMap hMap, Telemetry t, Follower f) {
         telemetry = t;
         follower = f;
         CommandScheduler.getInstance().setBulkReading(hMap, LynxModule.BulkCachingMode.MANUAL);
@@ -69,9 +70,11 @@ public class BucketRobot extends Robot {
 
 
     }
+
     public Command enableIntake() {
         return new InstantCommand(() -> intake.StartIntake());
     }
+
     public Command disableIntake() {
         return new InstantCommand(() -> intake.StopIntake());
     }
@@ -79,12 +82,15 @@ public class BucketRobot extends Robot {
     public Command enableOutake() {
         return new InstantCommand(() -> outake.StartOutake());
     }
+
     public Command disableOutake() {
         return new InstantCommand(() -> outake.StopOutake());
     }
+
     public Command shootRight() {
         return outake.shootR();
     }
+
     public Command shootLeft() {
         return outake.shootL();
     }
@@ -92,9 +98,11 @@ public class BucketRobot extends Robot {
     public Command shootGreen() {
         return outake.shootGreen();
     }
+
     public Command shootPurple() {
         return outake.shootPurple();
     }
+
     public Command shootLoaded() {
         return outake.shootLoaded();
     }
@@ -106,6 +114,7 @@ public class BucketRobot extends Robot {
                 shootLoaded()
         );
     }
+
     private Command shootPGP() {
         return new SequentialCommandGroup(
                 shootPurple(),
@@ -113,6 +122,7 @@ public class BucketRobot extends Robot {
                 shootLoaded()
         );
     }
+
     private Command shootPPG() {
         return new SequentialCommandGroup(
                 shootPurple(),
@@ -120,19 +130,36 @@ public class BucketRobot extends Robot {
                 shootLoaded()
         );
     }
+
     public Command shootPattern() {
         return new SelectCommand(
                 new HashMap<Object, Command>() {{
-                    put(ARTIFACTPATTERN.GPP,shootGPP());
-                    put(ARTIFACTPATTERN.PGP,shootPGP());
-                    put(ARTIFACTPATTERN.PPG,shootPPG());
+                    put(ARTIFACTPATTERN.GPP, shootGPP());
+                    put(ARTIFACTPATTERN.PGP, shootPGP());
+                    put(ARTIFACTPATTERN.PPG, shootPPG());
                     put(ARTIFACTPATTERN.NONE, shootPGP());
                 }},
                 () -> pattern);
     }
 
-    private void setFlywheelSpeed()
-    {
+    public Command startAndShootPattern() {
+        return new SequentialCommandGroup(
+                enableOutake(),
+                new SelectCommand(
+                        new HashMap<Object, Command>() {
+                            {
+                                put(ARTIFACTPATTERN.GPP, shootGPP());
+                                put(ARTIFACTPATTERN.PGP, shootPGP());
+                                put(ARTIFACTPATTERN.PPG, shootPPG());
+                                put(ARTIFACTPATTERN.NONE, shootPGP());
+                            }
+                        },
+                        () -> pattern),
+                disableOutake()
+        );
+    }
+
+    private void setFlywheelSpeed() {
         if (fixedSpeed)
             Outake.speed = 0.7;
         else {
@@ -145,6 +172,7 @@ public class BucketRobot extends Robot {
                 Outake.speed = .85;
         }
     }
+
     @Override
     public void run() {
         currentPos = follower.getPose();
@@ -158,7 +186,7 @@ public class BucketRobot extends Robot {
         //adjust power to hit goal
         setFlywheelSpeed();
 
-        if (camera != null && pattern == ARTIFACTPATTERN.NONE){
+        if (camera != null && pattern == ARTIFACTPATTERN.NONE) {
             for (AprilTagDetection detection : camera.currentDetections) {
                 if (detection.id == ARTIFACTPATTERN.GPP.getPattern()) {
                     pattern = ARTIFACTPATTERN.GPP;
@@ -177,26 +205,25 @@ public class BucketRobot extends Robot {
         super.run();
     }
 
-    public static Pose createPose(double x, double y, double heading)
-    {
+    public static Pose createPose(double x, double y, double heading) {
         if (blueAlliance)
-            return new Pose(x,y,heading);
+            return new Pose(x, y, heading);
         else
-            return new Pose(x,y,heading).mirror();
+            return new Pose(x, y, heading).mirror();
     }
 
     public static Pose createPose(double x, double y) {
         if (blueAlliance)
-            return new Pose(x,y);
+            return new Pose(x, y);
         else
-            return new Pose(x,y).mirror();
+            return new Pose(x, y).mirror();
     }
 
     public static Pose createPose(double[] pos) {
         if (pos.length == 2)
-            return createPose(pos[0],pos[1]);
+            return createPose(pos[0], pos[1]);
         if (pos.length == 3)
-            return createPose(pos[0],pos[1], Math.toRadians(pos[2]));
+            return createPose(pos[0], pos[1], Math.toRadians(pos[2]));
         return null;
     }
 

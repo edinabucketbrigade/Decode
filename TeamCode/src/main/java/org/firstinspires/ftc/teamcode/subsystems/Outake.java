@@ -38,9 +38,7 @@ public class Outake extends SubsystemBase {
     public static double kD = 0.0;
     public static double speed = 1.0;
 
-    public static long targetGreen = 400;
-    public static long targetBlue = 300;
-    public static long targetRed = 200;
+    public static boolean waitToShoot = true;
 
     public static double resetPosition = 0.4;
     public static double triggerPosition = 1.0;
@@ -140,15 +138,16 @@ public class Outake extends SubsystemBase {
     }
 
     public final Command waitUntilFast() {
-        return new WaitUntilCommand(() ->
-                (flywheel.getVelocity() / setSpeed) > 0.90
-        );
-
+        if (waitToShoot)
+            return new WaitUntilCommand(() ->
+                (flywheel.getVelocity() / setSpeed) > 0.80
+            );
+        else return new WaitCommand(1);
     }
 
     public CommandBase shootL() {
         return new SequentialCommandGroup(
-                //waitUntilFast(),
+                waitUntilFast(),
                 new InstantCommand(() -> SettriggerL(triggerPosition)),
                 new WaitCommand(triggerDelay),
                 new InstantCommand(() -> SettriggerL(resetPosition))
@@ -158,7 +157,7 @@ public class Outake extends SubsystemBase {
 
     public CommandBase shootR() {
         return new SequentialCommandGroup(
-                //waitUntilFast(),
+                waitUntilFast(),
                 new InstantCommand(() -> SettriggerR(triggerPosition)),
                 new WaitCommand(triggerDelay),
                 new InstantCommand(() -> SettriggerR(resetPosition))

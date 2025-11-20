@@ -6,7 +6,7 @@ import com.bylazar.configurables.annotations.Configurable;
 @Configurable
 public class AutoPoints {
     public static double[] startingFarPos = {56,8.5,90};
-    public static double[] startingNearPos = {32.5,135.5,90};
+    public static double[] startingNearPos = {56,135.5,270};
     public static double[] patternPos1 = {19,84,180};
     public static double[] patternPos2 = {19,60,180};
     public static double[] patternPos3 = {19,36,180};
