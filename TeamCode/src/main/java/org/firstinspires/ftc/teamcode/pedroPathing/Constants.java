@@ -19,7 +19,7 @@ public class Constants {
     public static double LateralZeroPowerAcceleration = 1.0;
 
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(15)
+            .mass(11.7)
             //.forwardZeroPowerAcceleration(ForwardZeroPowerAcceleration)
             //.lateralZeroPowerAcceleration(LateralZeroPowerAcceleration)
             ;
@@ -42,8 +42,8 @@ public class Constants {
             //.xVelocity(XVelocity)
             //.yVelocity(YVelocity)
             ;
-    public static double RobotWidth =15.5;
-    public static double RobotLength =17.0;
+    //public static double RobotWidth =15.5;
+    //public static double RobotLength =17.0;
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .distanceUnit(DistanceUnit.INCH)

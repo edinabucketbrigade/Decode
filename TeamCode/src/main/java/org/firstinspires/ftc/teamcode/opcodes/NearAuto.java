@@ -180,12 +180,15 @@ public class NearAuto  extends CommandOpMode {
                 robot.enableIntake(),
 
                 new FollowPathCommand(follower, CollectPattern1),
+                new FollowPathCommand(follower, ShootCollected1),
                 robot.startAndShootPattern(),
 
                 new FollowPathCommand(follower, CollectPattern2),
+                new FollowPathCommand(follower, ShootCollected2),
                 robot.startAndShootPattern(),
 
                 new FollowPathCommand(follower, CollectPattern3),
+                new FollowPathCommand(follower, ShootCollected3),
                 robot.startAndShootPattern(),
 
                 robot.disableIntake(),

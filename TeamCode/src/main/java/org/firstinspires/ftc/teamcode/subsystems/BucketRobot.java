@@ -145,16 +145,7 @@ public class BucketRobot extends Robot {
     public Command startAndShootPattern() {
         return new SequentialCommandGroup(
                 enableOutake(),
-                new SelectCommand(
-                        new HashMap<Object, Command>() {
-                            {
-                                put(ARTIFACTPATTERN.GPP, shootGPP());
-                                put(ARTIFACTPATTERN.PGP, shootPGP());
-                                put(ARTIFACTPATTERN.PPG, shootPPG());
-                                put(ARTIFACTPATTERN.NONE, shootPGP());
-                            }
-                        },
-                        () -> pattern),
+               shootPattern(),
                 disableOutake()
         );
     }
@@ -200,7 +191,7 @@ public class BucketRobot extends Robot {
                 }
             }
         }
-
+        telemetry.addData("Pattern",pattern.name());
         follower.update();
         super.run();
     }
