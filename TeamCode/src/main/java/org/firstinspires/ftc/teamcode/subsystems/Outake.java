@@ -11,6 +11,7 @@ import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.ConditionalCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
+import com.seattlesolvers.solverslib.command.ParallelRaceGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
@@ -34,8 +35,8 @@ public class Outake extends SubsystemBase {
 
     public static double kP = 0.001;
     public static double kI = 0.0;
-    public static double kV = 1.3;
-    public static double kD = 0.0;
+    public static double kV = 1.0;
+    public static double kD = 0.0001;
     public static double speed = 1.0;
 
     public static boolean waitToShoot = true;
@@ -53,7 +54,7 @@ public class Outake extends SubsystemBase {
         NOTHING
     }
 
-    public static double distanceToBall = 10.0;
+    public static double distanceToBall = 13.0;
 
     private Telemetry telemetry;
 
@@ -69,7 +70,7 @@ public class Outake extends SubsystemBase {
 
         triggerL = new ServoEx(hardwareMap, "Servo_Left", 0, 1);
         triggerR = new ServoEx(hardwareMap, "Servo_Right", 0, 1);
-        triggerL.setInverted(true);
+        triggerR.setInverted(true);
         triggerL.set(resetPosition);
         triggerR.set(resetPosition);
 
@@ -83,7 +84,6 @@ public class Outake extends SubsystemBase {
     @Override
     public void periodic() {
         telemetry.addData("Loaded","%-7s - %-7s", getLeftColor().name(),getRightColor().name());
-
 
 
         if (flywheel != null) {
@@ -128,7 +128,9 @@ public class Outake extends SubsystemBase {
         return ArtifactColor.PURPLE;
     }
 
-
+    public boolean isLoaded() {
+        return getLeftColor() != ArtifactColor.NOTHING || getRightColor() != ArtifactColor.NOTHING;
+    }
     public void SettriggerL(double position) {
         triggerL.set(position);
     }
@@ -139,8 +141,10 @@ public class Outake extends SubsystemBase {
 
     public final Command waitUntilFast() {
         if (waitToShoot)
-            return new WaitUntilCommand(() ->
-                (flywheel.getVelocity() / setSpeed) > 0.80
+            return new ParallelRaceGroup(
+                    new WaitUntilCommand(() ->
+                            (flywheel.getVelocity() / setSpeed) > 0.90),
+                    new WaitCommand(1500)
             );
         else return new WaitCommand(1);
     }
@@ -187,11 +191,10 @@ public class Outake extends SubsystemBase {
     }
 
     public CommandBase shootGreen() {
-
         return new ConditionalCommand(
                 shootL(),
                 shootR(),
-                () -> getRightColor() == ArtifactColor.GREEN
+                () -> getLeftColor() == ArtifactColor.GREEN
         );
     }
 

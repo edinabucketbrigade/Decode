@@ -3,19 +3,26 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.MathFunctions;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
 import com.seattlesolvers.solverslib.command.InstantCommand;
+import com.seattlesolvers.solverslib.command.ParallelRaceGroup;
 import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.command.SelectCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
+import com.seattlesolvers.solverslib.command.WaitCommand;
+import com.seattlesolvers.solverslib.command.WaitUntilCommand;
+import com.seattlesolvers.solverslib.pedroCommand.TurnToCommand;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.auto.AutoPoints;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.HashMap;
+
 
 
 @Configurable
@@ -30,6 +37,9 @@ public class BucketRobot extends Robot {
     public static Pose currentPos = null;
 
     public boolean fixedSpeed = false;
+    public static double farSpeed = 0.85;
+    public static double midSpeed = 0.7;
+    public static double nearSpeed = 0.5;
 
     public enum ARTIFACTPATTERN {
         NONE(0),
@@ -52,11 +62,14 @@ public class BucketRobot extends Robot {
     private static boolean disableCamera = false;
     private Telemetry telemetry;
     private Follower follower;
+    private Pose targetPos;
 
     public BucketRobot(HardwareMap hMap, Telemetry t, Follower f) {
         telemetry = t;
         follower = f;
         CommandScheduler.getInstance().setBulkReading(hMap, LynxModule.BulkCachingMode.MANUAL);
+        targetPos = BucketRobot.createPose(AutoPoints.targetPos);
+
 
         outake = new Outake(hMap, t);
         intake = new Intake(hMap, t);
@@ -111,6 +124,10 @@ public class BucketRobot extends Robot {
         return new SequentialCommandGroup(
                 shootGreen(),
                 shootPurple(),
+                new ParallelRaceGroup(
+                        new WaitUntilCommand(outake::isLoaded),
+                        new WaitCommand(2000)
+                ),
                 shootLoaded()
         );
     }
@@ -119,6 +136,10 @@ public class BucketRobot extends Robot {
         return new SequentialCommandGroup(
                 shootPurple(),
                 shootGreen(),
+                new ParallelRaceGroup(
+                        new WaitUntilCommand(outake::isLoaded),
+                        new WaitCommand(2000)
+                ),
                 shootLoaded()
         );
     }
@@ -127,6 +148,10 @@ public class BucketRobot extends Robot {
         return new SequentialCommandGroup(
                 shootPurple(),
                 shootPurple(),
+                new ParallelRaceGroup(
+                        new WaitUntilCommand(outake::isLoaded),
+                        new WaitCommand(2000)
+                ),
                 shootLoaded()
         );
     }
@@ -145,22 +170,22 @@ public class BucketRobot extends Robot {
     public Command startAndShootPattern() {
         return new SequentialCommandGroup(
                 enableOutake(),
-               shootPattern(),
+                shootPattern(),
                 disableOutake()
         );
     }
 
     private void setFlywheelSpeed() {
         if (fixedSpeed)
-            Outake.speed = 0.7;
+            Outake.speed = midSpeed;
         else {
             double currentY = currentPos.getY();
             if (currentY >= 100)
-                Outake.speed = .55;
-            else if (currentY > 72)
-                Outake.speed = .7;
+                Outake.speed = nearSpeed;
+            else if (currentY > 48)
+                Outake.speed = midSpeed;
             else
-                Outake.speed = .85;
+                Outake.speed = farSpeed;
         }
     }
 

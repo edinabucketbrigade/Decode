@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
@@ -15,19 +16,20 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
-    public static double ForwardZeroPowerAcceleration = 1.0;
-    public static double LateralZeroPowerAcceleration = 1.0;
+    public static double ForwardZeroPowerAcceleration = -35.0749;
+    public static double LateralZeroPowerAcceleration = -63.5919;
 
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(11.7)
-            //.forwardZeroPowerAcceleration(ForwardZeroPowerAcceleration)
-            //.lateralZeroPowerAcceleration(LateralZeroPowerAcceleration)
+            .forwardZeroPowerAcceleration(ForwardZeroPowerAcceleration)
+            .lateralZeroPowerAcceleration(LateralZeroPowerAcceleration)
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0))
             ;
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
-    public static double XVelocity = 1.0;
-    public static double YVelocity = 1.0;
+    public static double XVelocity = 62.35986808;
+    public static double YVelocity = 51.49742;
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
@@ -39,8 +41,8 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            //.xVelocity(XVelocity)
-            //.yVelocity(YVelocity)
+            .xVelocity(XVelocity)
+            .yVelocity(YVelocity)
             ;
     //public static double RobotWidth =15.5;
     //public static double RobotLength =17.0;

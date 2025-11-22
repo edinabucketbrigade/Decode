@@ -12,7 +12,7 @@ public class AutoPoints {
     public static double[] patternPos3 = {19,36,180};
     public static double[] shootingFarPos = {56,11};
     public static double[] shootingNearPos = {50,84};
-    public static double[] targetPos = {8,136};
+    public static double[] targetPos = {8,142};
     public static double[] endingFarPos = {36,13};
     public static double[] endingNearPos = {36,13};
 }

@@ -86,7 +86,7 @@ public class FarAuto extends CommandOpMode {
         ShootLoaded = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(startingPos, shootingFarPos)
+                        new BezierLine(startingPos, shootingNearPos)
                 )
                 .setHeadingInterpolation(HeadingInterpolator.facingPoint(targetPos))
                 .build();
