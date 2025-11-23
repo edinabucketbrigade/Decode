@@ -3,11 +3,11 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.math.MathFunctions;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandScheduler;
+import com.seattlesolvers.solverslib.command.DeferredCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.ParallelRaceGroup;
 import com.seattlesolvers.solverslib.command.Robot;
@@ -15,14 +15,13 @@ import com.seattlesolvers.solverslib.command.SelectCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
-import com.seattlesolvers.solverslib.pedroCommand.TurnToCommand;
+import com.seattlesolvers.solverslib.pedroCommand.TurnCommand;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.auto.AutoPoints;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.HashMap;
-
 
 
 @Configurable
@@ -63,6 +62,9 @@ public class BucketRobot extends Robot {
     private Telemetry telemetry;
     private Follower follower;
     private Pose targetPos;
+    private double targetAngle = 0.0;
+
+    public static boolean turnToTarget = true;
 
     public BucketRobot(HardwareMap hMap, Telemetry t, Follower f) {
         telemetry = t;
@@ -118,6 +120,15 @@ public class BucketRobot extends Robot {
 
     public Command shootLoaded() {
         return outake.shootLoaded();
+    }
+    public Command turnToTargetAndShoot(Command command) {
+        if (turnToTarget && targetAngle != 0.0)
+        return new SequentialCommandGroup(
+                new DeferredCommand(() -> new TurnCommand(follower, targetAngle,false),
+                        null),
+                command
+        );
+        else return command;
     }
 
     private Command shootGPP() {
@@ -179,6 +190,7 @@ public class BucketRobot extends Robot {
         if (fixedSpeed)
             Outake.speed = midSpeed;
         else {
+            //Outake.speed = currentPos.distanceFrom(targetPos) / 153 * .3 + .55;
             double currentY = currentPos.getY();
             if (currentY >= 100)
                 Outake.speed = nearSpeed;
@@ -202,21 +214,37 @@ public class BucketRobot extends Robot {
         //adjust power to hit goal
         setFlywheelSpeed();
 
-        if (camera != null && pattern == ARTIFACTPATTERN.NONE) {
+
+        if (camera != null) {
+            targetAngle = 0.0;
             for (AprilTagDetection detection : camera.currentDetections) {
-                if (detection.id == ARTIFACTPATTERN.GPP.getPattern()) {
-                    pattern = ARTIFACTPATTERN.GPP;
-                    break;
-                } else if (detection.id == ARTIFACTPATTERN.PGP.getPattern()) {
-                    pattern = ARTIFACTPATTERN.PGP;
-                    break;
-                } else if (detection.id == ARTIFACTPATTERN.PPG.getPattern()) {
-                    pattern = ARTIFACTPATTERN.PPG;
-                    break;
+                if (pattern == ARTIFACTPATTERN.NONE) {
+
+                    if (detection.id == ARTIFACTPATTERN.GPP.getPattern()) {
+                        pattern = ARTIFACTPATTERN.GPP;
+                        break;
+                    } else if (detection.id == ARTIFACTPATTERN.PGP.getPattern()) {
+                        pattern = ARTIFACTPATTERN.PGP;
+                        break;
+                    } else if (detection.id == ARTIFACTPATTERN.PPG.getPattern()) {
+                        pattern = ARTIFACTPATTERN.PPG;
+                        break;
+                    }
                 }
+                if (blueAlliance && detection.id == 20)
+                    targetAngle = detection.ftcPose.bearing;
+                else if (detection.id == 24)
+                    targetAngle = detection.ftcPose.bearing;
             }
         }
-        telemetry.addData("Pattern",pattern.name());
+        telemetry.addData("Pattern", "%s targeted at <%f,%f> distance %f",
+                pattern.name(),
+                targetPos.getX(),
+                targetPos.getY(),
+                currentPos.distanceFrom(targetPos) / 153
+
+        );
+
         follower.update();
         super.run();
     }
