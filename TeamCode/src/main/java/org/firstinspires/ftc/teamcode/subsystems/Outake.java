@@ -106,9 +106,7 @@ public class Outake extends SubsystemBase {
     @Override
     public void periodic() {
         telemetry.addData("Loaded", "%-7s - %-7s", getLeftColor().name(), getRightColor().name());
-        telemetry.addData("Distance", "%f - %f",
-                leftSensor.getDistance(DistanceUnit.CM),
-                rightSensor.getDistance(DistanceUnit.CM));
+
         if (useOldFlywheel) {
             if (flywheel != null) {
                 setSpeed = speed * maxSpeed;
@@ -117,11 +115,10 @@ public class Outake extends SubsystemBase {
                 else
                     flywheel.setVelocity(0);
 
-                telemetry.addData("Outake velocity", "%f (%f%%) -> %f",
-                        flywheel.getVelocity(),
-                        (flywheel.getVelocity() / setSpeed * 100),
-                        setSpeed);
-                telemetry.addData("Speed", speed);
+                telemetry.addData("Outake velocity", "%f/%f (%f%%)",
+                        flywheel.getVelocity(),setSpeed,
+                        (flywheel.getVelocity() / setSpeed * 100)
+                        );
 
             }
 
@@ -135,13 +132,14 @@ public class Outake extends SubsystemBase {
                 else
                     fly.setPower(0);
 
-                telemetry.addData("Outake velocity", "%f (%f%%) -> %f",
-                        fly.getVelocity(),
-                        (fly.getVelocity() / setSpeed * 100),
-                        setSpeed);
-                telemetry.addData("Speed", speed);
+                telemetry.addData("Outake velocity", "%f/%f (%f%%)",
+                        fly.getVelocity(),setSpeed,
+                        (fly.getVelocity() / setSpeed * 100)
+                        );
+
             }
         }
+        telemetry.addData("Speed", speed);
     }
 
     public void StartOutake() {

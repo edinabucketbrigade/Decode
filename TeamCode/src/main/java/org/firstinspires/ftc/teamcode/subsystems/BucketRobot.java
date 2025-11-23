@@ -237,12 +237,8 @@ public class BucketRobot extends Robot {
                     targetAngle = detection.ftcPose.bearing;
             }
         }
-        telemetry.addData("Pattern", "%s targeted at <%f,%f> distance %f",
-                pattern.name(),
-                targetPos.getX(),
-                targetPos.getY(),
-                currentPos.distanceFrom(targetPos) / 153
-
+        telemetry.addData("Pattern",
+                pattern.name()
         );
 
         follower.update();
