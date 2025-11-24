@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.MathFunctions;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.Command;
@@ -16,6 +17,8 @@ import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.pedroCommand.TurnCommand;
+import com.seattlesolvers.solverslib.pedroCommand.TurnToCommand;
+import com.seattlesolvers.solverslib.util.InterpLUT;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.auto.AutoPoints;
@@ -36,8 +39,8 @@ public class BucketRobot extends Robot {
     public static Pose currentPos = null;
 
     public boolean fixedSpeed = false;
-    public static double farSpeed = 0.85;
-    public static double midSpeed = 0.7;
+    public static double farSpeed = 0.88;
+    public static double midSpeed = 0.68;
     public static double nearSpeed = 0.5;
 
     public enum ARTIFACTPATTERN {
@@ -64,7 +67,7 @@ public class BucketRobot extends Robot {
     private Pose targetPos;
     private double targetAngle = 0.0;
 
-    public static boolean turnToTarget = true;
+    public static boolean turnToTarget = false;
 
     public BucketRobot(HardwareMap hMap, Telemetry t, Follower f) {
         telemetry = t;
@@ -103,31 +106,37 @@ public class BucketRobot extends Robot {
     }
 
     public Command shootRight() {
-        return outake.shootR();
+        return turnToTargetAndShoot(outake.shootR());
     }
 
     public Command shootLeft() {
-        return outake.shootL();
+        return turnToTargetAndShoot(outake.shootL());
     }
 
     public Command shootGreen() {
-        return outake.shootGreen();
+        return turnToTargetAndShoot(outake.shootGreen());
     }
 
     public Command shootPurple() {
-        return outake.shootPurple();
+        return turnToTargetAndShoot(outake.shootPurple());
     }
 
     public Command shootLoaded() {
-        return outake.shootLoaded();
+        return turnToTargetAndShoot(outake.shootLoaded());
     }
+
+    public Command shootBoth() {
+        return turnToTargetAndShoot(outake.shootBoth());
+    }
+
     public Command turnToTargetAndShoot(Command command) {
         if (turnToTarget && targetAngle != 0.0)
-        return new SequentialCommandGroup(
-                new DeferredCommand(() -> new TurnCommand(follower, targetAngle,false),
-                        null),
-                command
-        );
+            return new SequentialCommandGroup(
+                    new DeferredCommand(() -> new TurnToCommand(follower,
+                            Math.toRadians( targetAngle)),
+                            null),
+                    command
+            );
         else return command;
     }
 
@@ -139,7 +148,7 @@ public class BucketRobot extends Robot {
                         new WaitUntilCommand(outake::isLoaded),
                         new WaitCommand(2000)
                 ),
-                shootLoaded()
+                shootBoth()
         );
     }
 
@@ -151,7 +160,7 @@ public class BucketRobot extends Robot {
                         new WaitUntilCommand(outake::isLoaded),
                         new WaitCommand(2000)
                 ),
-                shootLoaded()
+                shootBoth()
         );
     }
 
@@ -163,7 +172,7 @@ public class BucketRobot extends Robot {
                         new WaitUntilCommand(outake::isLoaded),
                         new WaitCommand(2000)
                 ),
-                shootLoaded()
+                shootBoth()
         );
     }
 
@@ -190,14 +199,27 @@ public class BucketRobot extends Robot {
         if (fixedSpeed)
             Outake.speed = midSpeed;
         else {
-            //Outake.speed = currentPos.distanceFrom(targetPos) / 153 * .3 + .55;
-            double currentY = currentPos.getY();
+
+            // Outake.speed = currentPos.distanceFrom(targetPos) / 143 * .3 + .55;
+            double dist = currentPos.distanceFrom(targetPos);
+            //double currentY = currentPos.getY();
+/*
             if (currentY >= 100)
                 Outake.speed = nearSpeed;
             else if (currentY > 48)
                 Outake.speed = midSpeed;
             else
                 Outake.speed = farSpeed;
+            */
+
+            if (dist >= 130)
+                Outake.speed = farSpeed;
+            else if (dist > 60)
+                Outake.speed = midSpeed;
+            else
+                Outake.speed = nearSpeed;
+
+
         }
     }
 
@@ -205,10 +227,12 @@ public class BucketRobot extends Robot {
     public void run() {
         currentPos = follower.getPose();
 
-        telemetry.addData("Pose", "<%f,%f>:%f",
+        telemetry.addData("Pose", "<%f,%f>:%f distance %f at %f degrees",
                 currentPos.getX(),
                 currentPos.getY(),
-                Math.toDegrees(currentPos.getHeading()));
+                Math.toDegrees(currentPos.getHeading()),
+                currentPos.distanceFrom(targetPos), targetAngle
+        );
 
 
         //adjust power to hit goal
@@ -231,10 +255,18 @@ public class BucketRobot extends Robot {
                         break;
                     }
                 }
-                if (blueAlliance && detection.id == 20)
-                    targetAngle = detection.ftcPose.bearing;
-                else if (detection.id == 24)
-                    targetAngle = detection.ftcPose.bearing;
+                //if (blueAlliance && detection.id == 20)
+                //    targetAngle = detection.ftcPose.bearing;
+                //else if (detection.id == 24)
+                //    targetAngle = detection.ftcPose.bearing;
+                if (!blueAlliance)
+                    targetAngle = Math.toDegrees( MathFunctions.normalizeAngle(Math.atan2(
+                            targetPos.getY() - currentPos.getY(),
+                            targetPos.getX() - currentPos.getX())))
+                            +90;
+                else targetAngle = Math.toDegrees( MathFunctions.normalizeAngle(Math.atan2(
+                        targetPos.getY() - currentPos.getY(),
+                        currentPos.getX())));
             }
         }
         telemetry.addData("Pattern",

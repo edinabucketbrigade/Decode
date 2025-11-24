@@ -66,6 +66,8 @@ public class BlueTeleOp extends CommandOpMode {
         new Trigger(() -> controller.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.2)
                 .whileActiveOnce(robot.shootRight());
 
+        controller.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(robot.shootLeft());
+        controller.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(robot.shootRight());
         // LEFT_BUMPER controlls the start and stop of the outake
         controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .toggleWhenPressed(robot.enableIntake(), robot.disableIntake());

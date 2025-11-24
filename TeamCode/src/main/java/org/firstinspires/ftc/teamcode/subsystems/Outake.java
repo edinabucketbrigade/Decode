@@ -15,6 +15,7 @@ import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandBase;
 import com.seattlesolvers.solverslib.command.ConditionalCommand;
 import com.seattlesolvers.solverslib.command.InstantCommand;
+import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.ParallelRaceGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -52,7 +53,7 @@ public class Outake extends SubsystemBase {
     public static boolean waitToShoot = true;
 
     public static double resetPosition = 0.4;
-    public static double triggerPosition = 1.0;
+    public static double triggerPosition = .9;
     public static long triggerDelay = 150;
     private double setSpeed = 0;
 
@@ -184,12 +185,23 @@ public class Outake extends SubsystemBase {
     }
 
     public final Command waitUntilFast() {
-        if (waitToShoot)
-            return new ParallelRaceGroup(
-                    new WaitUntilCommand(() ->
-                            (flywheel.getVelocity() / setSpeed) > 0.90),
-                    new WaitCommand(1500)
-            );
+        if (waitToShoot) {
+            if (useOldFlywheel) {
+                return new ParallelRaceGroup(
+                        new WaitUntilCommand(() ->
+                                (flywheel.getVelocity() / setSpeed) > 0.90),
+                        new WaitCommand(1500)
+                );
+            }
+            else
+            {
+                return new ParallelRaceGroup(
+                        new WaitUntilCommand(() ->
+                                (fly.getVelocity() / setSpeed) > 0.90),
+                        new WaitCommand(1500)
+                );
+            }
+        }
         else return new WaitCommand(1);
     }
 
@@ -212,6 +224,12 @@ public class Outake extends SubsystemBase {
         );
     }
 
+    public CommandBase shootBoth() {
+        return new ParallelCommandGroup(
+                shootL(),
+                shootR()
+        );
+    }
     public CommandBase shootLoaded() {
         return new ConditionalCommand(
                 shootL(),
