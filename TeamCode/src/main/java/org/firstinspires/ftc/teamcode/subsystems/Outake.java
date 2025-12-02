@@ -1,9 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
 import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -22,7 +19,6 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.controller.PIDFController;
-import com.seattlesolvers.solverslib.hardware.SensorColor;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
@@ -36,12 +32,12 @@ public class Outake extends SubsystemBase {
 
     private DcMotorEx fly;
     private PIDFController pidf;
-    private VoltageSensor voltageSensor;
+    private final VoltageSensor voltageSensor;
 
-    private ServoEx triggerL;
-    private ServoEx triggerR;
-    private ColorRangeSensor leftSensor;
-    private ColorRangeSensor rightSensor;
+    private final ServoEx triggerL;
+    private final ServoEx triggerR;
+    private final ColorRangeSensor leftSensor;
+    private final ColorRangeSensor rightSensor;
     public static double maxSpeed = 2140;
 
     public static double kP = 0.001;
@@ -67,7 +63,7 @@ public class Outake extends SubsystemBase {
 
     public static double distanceToBall = 13.0;
 
-    private Telemetry telemetry;
+    private final Telemetry telemetry;
 
     public static boolean useOldFlywheel = false;
 

@@ -5,6 +5,8 @@ import com.bylazar.configurables.annotations.Configurable;
 //make points configurable
 @Configurable
 public class AutoPoints {
+    public static double collectSpeed = 1.0;
+
     public static double[] startingFarPos = {56,8.5,90};
     public static double[] startingNearPos = {56,135.5,90};
     public static double[] patternPos1 = {19,84,180};

@@ -5,21 +5,15 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.CommandScheduler;
-import com.seattlesolvers.solverslib.command.InstantCommand;
-import com.seattlesolvers.solverslib.command.button.Trigger;
+import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.gamepad.ToggleButtonReader;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
-
-import java.util.List;
 
 @Configurable
 @TeleOp(name = "BlueTeleOp", group = "TeleOp")
@@ -37,7 +31,7 @@ public class BlueTeleOp extends CommandOpMode {
         this(true);
     }
 
-    ToggleButtonReader slowMode, fixedOutake;
+    ToggleButtonReader slowMode, fixedOutake, turnToTarget;
 
     @Override
     public void initialize() {
@@ -61,10 +55,6 @@ public class BlueTeleOp extends CommandOpMode {
 
         controller = new GamepadEx(gamepad1);
 
-        new Trigger(() -> controller.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.2)
-                .whileActiveOnce(robot.shootLeft());
-        new Trigger(() -> controller.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.2)
-                .whileActiveOnce(robot.shootRight());
 
         controller.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(robot.shootLeft());
         controller.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(robot.shootRight());
@@ -93,21 +83,39 @@ public class BlueTeleOp extends CommandOpMode {
         fixedOutake = new ToggleButtonReader(
                 controller, GamepadKeys.Button.DPAD_UP
         );
+
+        turnToTarget = new ToggleButtonReader(
+                controller, GamepadKeys.Button.RIGHT_STICK_BUTTON
+        );
+
     }
 
     @Override
     public void run() {
         super.run();
         robot.run();
-        if (slowMode.getState())
-            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x/2, true);
-        else
-            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
-
-        robot.fixedSpeed = fixedOutake.getState();
 
         fixedOutake.readValue();
         slowMode.readValue();
+        turnToTarget.readValue();
+
+        if (slowMode.getState()) {
+            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x/2, true);
+        }
+        else {
+            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
+        }
+
+        robot.fixedSpeed = fixedOutake.getState();
+        robot.turnToTarget = turnToTarget.getState();
+
+        if (controller.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.2) {
+            robot.shootLeft().schedule();
+        }
+        if (controller.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.2) {
+            robot.shootRight().schedule();
+        }
+
         telemetry.update();
     }
 }

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opcodes;
 
+import static org.firstinspires.ftc.teamcode.auto.AutoPoints.collectSpeed;
+
 import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
@@ -7,21 +9,16 @@ import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.ParallelCommandGroup;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 
 import org.firstinspires.ftc.teamcode.auto.AutoPoints;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
-
-import java.util.List;
 
 @Autonomous(name = "BlueFarAuto", group = "Auto")
 public class FarAuto extends CommandOpMode {
@@ -46,7 +43,7 @@ public class FarAuto extends CommandOpMode {
     public PathChain ShootCollected1;
     public PathChain ShootCollected2;
     public PathChain ShootCollected3;
-    public PathChain MovetoEnd;
+    public PathChain MoveToEnd;
 
     public FarAuto(boolean isBlueAlliance) {
         BucketRobot.blueAlliance = isBlueAlliance;
@@ -165,7 +162,7 @@ public class FarAuto extends CommandOpMode {
                 )
                 .setHeadingInterpolation(HeadingInterpolator.facingPoint(targetPos))
                 .build();
-        MovetoEnd = follower
+        MoveToEnd = follower
                 .pathBuilder()
                 .addPath(
                         new BezierLine(shootingFarPos, endingPos)
@@ -180,20 +177,20 @@ public class FarAuto extends CommandOpMode {
 
                 robot.enableIntake(),
 
-                new FollowPathCommand(follower, CollectPattern1),
+                new FollowPathCommand(follower, CollectPattern1, collectSpeed),
                 new FollowPathCommand(follower, ShootCollected1),
                 robot.startAndShootPattern(),
 
-                new FollowPathCommand(follower, CollectPattern2),
+                new FollowPathCommand(follower, CollectPattern2, collectSpeed),
                 new FollowPathCommand(follower, ShootCollected2),
                 robot.startAndShootPattern(),
 
-                new FollowPathCommand(follower, CollectPattern3),
+                new FollowPathCommand(follower, CollectPattern3, collectSpeed),
                 new FollowPathCommand(follower, ShootCollected3),
                 robot.startAndShootPattern(),
 
                 robot.disableIntake(),
-                new FollowPathCommand(follower, MovetoEnd)
+                new FollowPathCommand(follower, MoveToEnd)
                 );
         auto.schedule();
     }

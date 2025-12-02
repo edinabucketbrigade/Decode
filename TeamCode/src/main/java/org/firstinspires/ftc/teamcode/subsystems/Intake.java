@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -13,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @Configurable
 public class Intake extends SubsystemBase {
-    private MotorEx flywheel;
+    private final MotorEx flywheel;
     public static double maxSpeed = Motor.GoBILDA.RPM_1150.getAchievableMaxTicksPerSecond();
     public static double kP = 0.1;
     public static double kI = 0.0;
@@ -22,7 +20,7 @@ public class Intake extends SubsystemBase {
 
     public static double speed = Motor.GoBILDA.RPM_1150.getAchievableMaxTicksPerSecond();
 
-    private Telemetry telemetry;
+    private final Telemetry telemetry;
     private double setSpeed = 0;
 
     public Intake(HardwareMap hardwareMap, Telemetry t){

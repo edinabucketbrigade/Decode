@@ -170,7 +170,7 @@ public class FarShortAuto extends CommandOpMode{
                 )
                 .setHeadingInterpolation(HeadingInterpolator.facingPoint(targetPos))
                 .build();
-        MovetoEnd = follower
+        MoveToEnd = follower
                 .pathBuilder()
                 .addPath(
                         new BezierLine(shootingFarPos, endingPos)

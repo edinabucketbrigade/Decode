@@ -19,23 +19,21 @@ import java.util.List;
 @Configurable
 public class Camera extends SubsystemBase  {
 
-
-    public BucketRobot.ARTIFACTPATTERN pattern;
     /**
      * The variable to store our instance of the AprilTag processor.
      */
-    private AprilTagProcessor aprilTag;
+    private final AprilTagProcessor aprilTag;
 
     /**
      * The variable to store our instance of the vision portal.
      */
-    private VisionPortal visionPortal;
+    private final VisionPortal visionPortal;
 
     public List<AprilTagDetection> currentDetections;
-    private Telemetry telemetry;
-    private Position cameraPosition = new Position(DistanceUnit.INCH,
+    private final Telemetry telemetry;
+    private final Position cameraPosition = new Position(DistanceUnit.INCH,
             6.5, 8, 8.25, 0);
-    private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
+    private final YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
             0, -90, 0, 0);
     public Camera(HardwareMap hMap, Telemetry t){
         telemetry = t;
