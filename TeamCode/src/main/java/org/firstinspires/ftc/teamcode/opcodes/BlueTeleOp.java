@@ -23,6 +23,8 @@ public class BlueTeleOp extends CommandOpMode {
 
     private BucketRobot robot;
 
+    private boolean manualDrive = true;
+
     public BlueTeleOp(boolean isBlueAlliance) {
         BucketRobot.blueAlliance = isBlueAlliance;
     }
@@ -99,15 +101,24 @@ public class BlueTeleOp extends CommandOpMode {
         slowMode.readValue();
         turnToTarget.readValue();
 
-        if (slowMode.getState()) {
-            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x/2, true);
-        }
-        else {
-            follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
+        if (manualDrive) {
+            if (slowMode.getState()) {
+                follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x/2, true);
+            }
+            else {
+                follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
+            }
         }
 
         robot.fixedSpeed = fixedOutake.getState();
         robot.turnToTarget = turnToTarget.getState();
+
+        if (manualDrive && robot.turnToTarget)
+            manualDrive = false;
+        else if (!manualDrive && !robot.turnToTarget){
+            manualDrive = true;
+            follower.startTeleopDrive();
+        }
 
         if (controller.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.2) {
             robot.shootLeft().schedule();

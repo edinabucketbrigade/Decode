@@ -87,10 +87,12 @@ public class BucketRobot extends Robot {
 
 //Adding each val with a key
         lut.add(0, nearSpeed);
-        lut.add(50, nearSpeed);
-        lut.add(90, midSpeed);
-        lut.add(160, farSpeed);
+        lut.add(51.7,.55);
+        lut.add(71,.615);
+        lut.add(102,.7);
+        lut.add(140,.85);
         lut.add(200, 1.0);
+
 //generating final equation
         lut.createLUT();
     }
@@ -190,6 +192,7 @@ public class BucketRobot extends Robot {
         );
     }
 
+
     private void setFlywheelSpeed() {
         if (fixedSpeed)
             Outake.speed = midSpeed;
@@ -250,6 +253,7 @@ public class BucketRobot extends Robot {
 
         if (turnToTarget)
             new TurnToCommand(follower, targetAngle).schedule();
+
 
         telemetry.addData("Pattern",
                 pattern.name()

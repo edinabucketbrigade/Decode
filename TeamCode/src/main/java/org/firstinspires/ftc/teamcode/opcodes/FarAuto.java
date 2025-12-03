@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opcodes;
 
 import static org.firstinspires.ftc.teamcode.auto.AutoPoints.collectSpeed;
+import static org.firstinspires.ftc.teamcode.auto.AutoPoints.moveSpeed;
 
 import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
@@ -172,25 +173,25 @@ public class FarAuto extends CommandOpMode {
 
         // Create auto sequence
         auto = new SequentialCommandGroup(
-                new FollowPathCommand(follower, ShootLoaded),
+                new FollowPathCommand(follower, ShootLoaded, moveSpeed),
                 robot.startAndShootPattern(),
 
                 robot.enableIntake(),
 
                 new FollowPathCommand(follower, CollectPattern1, collectSpeed),
-                new FollowPathCommand(follower, ShootCollected1),
+                new FollowPathCommand(follower, ShootCollected1, moveSpeed),
                 robot.startAndShootPattern(),
 
                 new FollowPathCommand(follower, CollectPattern2, collectSpeed),
-                new FollowPathCommand(follower, ShootCollected2),
+                new FollowPathCommand(follower, ShootCollected2, moveSpeed),
                 robot.startAndShootPattern(),
 
                 new FollowPathCommand(follower, CollectPattern3, collectSpeed),
-                new FollowPathCommand(follower, ShootCollected3),
+                new FollowPathCommand(follower, ShootCollected3, moveSpeed),
                 robot.startAndShootPattern(),
 
                 robot.disableIntake(),
-                new FollowPathCommand(follower, MoveToEnd)
+                new FollowPathCommand(follower, MoveToEnd, moveSpeed)
                 );
         auto.schedule();
     }
