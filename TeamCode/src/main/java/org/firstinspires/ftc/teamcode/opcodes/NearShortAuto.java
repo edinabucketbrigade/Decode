@@ -1,12 +1,8 @@
 package org.firstinspires.ftc.teamcode.opcodes;
 
-import static org.firstinspires.ftc.teamcode.auto.AutoPoints.collectSpeed;
-import static org.firstinspires.ftc.teamcode.auto.AutoPoints.moveSpeed;
-
 import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
@@ -16,13 +12,15 @@ import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
-
 import org.firstinspires.ftc.teamcode.auto.AutoPoints;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.BucketRobot;
 
-@Autonomous(name = "BlueFarAuto", group = "Auto")
-public class FarAuto extends CommandOpMode {
+@Autonomous(name = "BlueNearShortAuto", group = "Auto")
+
+public class NearShortAuto extends CommandOpMode {
+
+
     public Follower follower;
     public BucketRobot robot;
 
@@ -44,13 +42,13 @@ public class FarAuto extends CommandOpMode {
     public PathChain ShootCollected1;
     public PathChain ShootCollected2;
     public PathChain ShootCollected3;
-    public PathChain MoveToEnd;
+    public PathChain MovetoEnd;
 
-    public FarAuto(boolean isBlueAlliance) {
+    public NearShortAuto(boolean isBlueAlliance) {
         BucketRobot.blueAlliance = isBlueAlliance;
     }
 
-    public FarAuto() {
+    public NearShortAuto() {
         this(true);
     }
 
@@ -61,7 +59,7 @@ public class FarAuto extends CommandOpMode {
         super.reset();
 
         //setup Positions
-        startingPos = BucketRobot.createPose(AutoPoints.startingFarPos);
+        startingPos = BucketRobot.createPose(AutoPoints.startingNearPos);
         targetPos = BucketRobot.createPose(AutoPoints.targetPos);
 
         patternPos1 = BucketRobot.createPose(AutoPoints.patternPos1);
@@ -70,7 +68,7 @@ public class FarAuto extends CommandOpMode {
 
         shootingFarPos = BucketRobot.createPose(AutoPoints.shootingFarPos);
         shootingNearPos = BucketRobot.createPose(AutoPoints.shootingNearPos);
-        endingPos = BucketRobot.createPose(AutoPoints.endingFarPos);
+        endingPos = BucketRobot.createPose(AutoPoints.endingNearPos);
 
 
         // Initialize follower
@@ -88,7 +86,14 @@ public class FarAuto extends CommandOpMode {
                 )
                 .setHeadingInterpolation(HeadingInterpolator.facingPoint(targetPos))
                 .build();
-        CollectPattern1 = follower
+        MovetoEnd = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(shootingNearPos, endingPos)
+                )
+                .setTangentHeadingInterpolation()
+                .build();
+        /*CollectPattern1 = follower
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
@@ -170,28 +175,32 @@ public class FarAuto extends CommandOpMode {
                 )
                 .setTangentHeadingInterpolation()
                 .build();
-
+*/
         // Create auto sequence
         auto = new SequentialCommandGroup(
-                new FollowPathCommand(follower, ShootLoaded, moveSpeed),
-                robot.enableIntake(),
+                new FollowPathCommand(follower, ShootLoaded),
                 robot.startAndShootPattern(),
 
-                new FollowPathCommand(follower, CollectPattern1, collectSpeed),
-                new FollowPathCommand(follower, ShootCollected1, moveSpeed),
+                /*robot.enableIntake(),
+
+                new FollowPathCommand(follower, CollectPattern1),
+                new FollowPathCommand(follower, ShootCollected1),
                 robot.startAndShootPattern(),
 
-                new FollowPathCommand(follower, CollectPattern2, collectSpeed),
-                new FollowPathCommand(follower, ShootCollected2, moveSpeed),
+                new FollowPathCommand(follower, CollectPattern2),
+                new FollowPathCommand(follower, ShootCollected2),
                 robot.startAndShootPattern(),
 
-                new FollowPathCommand(follower, CollectPattern3, collectSpeed),
-                new FollowPathCommand(follower, ShootCollected3, moveSpeed),
+                new FollowPathCommand(follower, CollectPattern3),
+                new FollowPathCommand(follower, ShootCollected3),
                 robot.startAndShootPattern(),
 
                 robot.disableIntake(),
-                new FollowPathCommand(follower, MoveToEnd, moveSpeed)
-                );
+                 */
+                new FollowPathCommand(follower, MovetoEnd)
+        );
+
+
         auto.schedule();
     }
 

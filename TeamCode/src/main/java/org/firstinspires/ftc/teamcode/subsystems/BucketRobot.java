@@ -35,6 +35,7 @@ public class BucketRobot extends Robot {
 
     //store latest robot position in auto to use in tele
     public static Pose currentPos = null;
+    public boolean updatePos = false;
 
     public boolean fixedSpeed = false;
     public static double farSpeed = 0.88;
@@ -88,9 +89,9 @@ public class BucketRobot extends Robot {
 //Adding each val with a key
         lut.add(0, nearSpeed);
         lut.add(51.7,.55);
-        lut.add(71,.615);
-        lut.add(102,.7);
-        lut.add(140,.85);
+        lut.add(71,.625);
+        lut.add(102,.71);
+        lut.add(140,.86);
         lut.add(200, 1.0);
 
 //generating final equation
@@ -201,14 +202,6 @@ public class BucketRobot extends Robot {
             double dist = currentPos.distanceFrom(targetPos);
             Outake.speed = lut.get(dist);
 
-/*            if (dist >= 130)
-                Outake.speed = farSpeed;
-            else if (dist > 60)
-                Outake.speed = midSpeed;
-            else
-                Outake.speed = nearSpeed;
-*/
-
         }
     }
 
@@ -220,18 +213,19 @@ public class BucketRobot extends Robot {
                 targetPos.getY() - currentPos.getY(),
                 targetPos.getX() - currentPos.getX()));
 
-        telemetry.addData("Pose", "<%f,%f>:%f distance %f at %f degrees",
+        telemetry.addData("Pose", "<%f,%f>:%f",
                 currentPos.getX(),
                 currentPos.getY(),
-                Math.toDegrees(currentPos.getHeading()),
+                Math.toDegrees(currentPos.getHeading())
+
+        );
+        telemetry.addData("Goal", "distance %f at %f degrees",
                 currentPos.distanceFrom(targetPos),
                 Math.toDegrees(targetAngle)
         );
 
-
         //adjust power to hit goal
         setFlywheelSpeed();
-
 
         if (camera != null) {
             for (AprilTagDetection detection : camera.currentDetections) {
@@ -248,12 +242,22 @@ public class BucketRobot extends Robot {
                         break;
                     }
                 }
+                /*if (updatePos) {
+                    if (detection.id == 20 || detection.id == 24) {
+                        Pose p = new Pose(detection.robotPose.getPosition().x,
+                                detection.robotPose.getPosition().y,
+                                detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS))
+                                .getAsCoordinateSystem(PedroCoordinates.INSTANCE);
+                        follower.setPose(p);
+                    }
+                }*/
+
+
             }
         }
 
         if (turnToTarget)
             new TurnToCommand(follower, targetAngle).schedule();
-
 
         telemetry.addData("Pattern",
                 pattern.name()

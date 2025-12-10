@@ -147,29 +147,29 @@ public class Outake extends SubsystemBase {
         enableFlywheel = false;
     }
 
-    private ArtifactColor getLeftColor() {
-        if (leftSensor.getDistance(DistanceUnit.CM) > distanceToBall ||
-                leftSensor.getDistance(DistanceUnit.CM) == DistanceSensor.distanceOutOfRange ||
-                new Double(leftSensor.getDistance(DistanceUnit.CM)).isNaN()
-        )
-            return ArtifactColor.NOTHING;
-        if (leftSensor.green() > leftSensor.blue())
+    public static ArtifactColor getArtifactColor(ColorRangeSensor sensor, double maxDistance) {
+        if (sensor.getDistance(DistanceUnit.CM) > maxDistance ||
+                sensor.getDistance(DistanceUnit.CM) == DistanceSensor.distanceOutOfRange ||
+                Double.valueOf(sensor.getDistance(DistanceUnit.CM)).isNaN()
+        ) return ArtifactColor.NOTHING;
+        if (sensor.green() > sensor.blue())
             return ArtifactColor.GREEN;
         return ArtifactColor.PURPLE;
     }
 
+    private ArtifactColor getLeftColor() {
+        return getArtifactColor(leftSensor, distanceToBall);
+    }
+
     private ArtifactColor getRightColor() {
-        if (rightSensor.getDistance(DistanceUnit.CM) > distanceToBall ||
-                rightSensor.getDistance(DistanceUnit.CM) == DistanceSensor.distanceOutOfRange ||
-                new Double(rightSensor.getDistance(DistanceUnit.CM)).isNaN())
-            return ArtifactColor.NOTHING;
-        if (rightSensor.green() > rightSensor.blue())
-            return ArtifactColor.GREEN;
-        return ArtifactColor.PURPLE;
+        return getArtifactColor(rightSensor, distanceToBall);
     }
 
     public boolean isLoaded() {
         return getLeftColor() != ArtifactColor.NOTHING || getRightColor() != ArtifactColor.NOTHING;
+    }
+    public boolean isFull() {
+        return getLeftColor() != ArtifactColor.NOTHING && getRightColor() != ArtifactColor.NOTHING;
     }
 
     public void SettriggerL(double position) {

@@ -69,7 +69,7 @@ public class NearAuto  extends CommandOpMode {
 
         shootingFarPos = BucketRobot.createPose(AutoPoints.shootingFarPos);
         shootingNearPos = BucketRobot.createPose(AutoPoints.shootingNearPos);
-        endingPos = BucketRobot.createPose(AutoPoints.endingNearPos);
+        endingPos = BucketRobot.createPose(AutoPoints.endingFarPos);
 
 
         // Initialize follower
@@ -174,9 +174,8 @@ public class NearAuto  extends CommandOpMode {
         // Create auto sequence
         Command auto = new SequentialCommandGroup(
                 new FollowPathCommand(follower, ShootLoaded),
-                robot.startAndShootPattern(),
-
                 robot.enableIntake(),
+                robot.startAndShootPattern(),
 
                 new FollowPathCommand(follower, CollectPattern1, collectSpeed),
                 new FollowPathCommand(follower, ShootCollected1),
