@@ -19,7 +19,6 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.command.WaitCommand;
 import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.controller.PIDFController;
-import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
@@ -40,13 +39,8 @@ public class Outake extends SubsystemBase {
     private final ColorRangeSensor rightSensor;
     public static double maxSpeed = 2140;
 
-    public static double kP = 0.001;
-    public static double kI = 0.0;
-    public static double kV = 1.0;
-    public static double kD = 0.0001;
-    public static double speed = 1.0;
 
-    public static boolean waitToShoot = true;
+    public static double speed = 1.0;
 
     public static double resetPosition = 0.4;
     public static double triggerPosition = .9;
@@ -65,26 +59,14 @@ public class Outake extends SubsystemBase {
 
     private final Telemetry telemetry;
 
-    public static boolean useOldFlywheel = false;
-
     public Outake(HardwareMap hardwareMap, Telemetry t) {
         telemetry = t;
 
-        if (useOldFlywheel) {
-            flywheel = new MotorEx(hardwareMap, "flywheel_outake", Motor.GoBILDA.BARE);
-            flywheel.setBuffer(1.0);
-            flywheel.setRunMode(Motor.RunMode.VelocityControl);
-            flywheel.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-            flywheel.setInverted(true);
-            flywheel.setVeloCoefficients(kP, kI, kD);
-            flywheel.setFeedforwardCoefficients(0, kV, 0);
+        fly = hardwareMap.get(DcMotorEx.class, "flywheel_outake");
+        fly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        fly.setDirection(DcMotorSimple.Direction.REVERSE);
+        pidf = new PIDFController(0.001, 0.0, 0.0001, 0.00048);
 
-        } else {
-            fly = hardwareMap.get(DcMotorEx.class, "flywheel_outake");
-            fly.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            fly.setDirection(DcMotorSimple.Direction.REVERSE);
-            pidf = new PIDFController(0.001, 0.0, 0.0001, 0.00048);
-        }
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         triggerL = new ServoEx(hardwareMap, "Servo_Left", 0, 1);
@@ -92,7 +74,6 @@ public class Outake extends SubsystemBase {
         triggerR.setInverted(true);
         triggerL.set(resetPosition);
         triggerR.set(resetPosition);
-
 
         leftSensor = hardwareMap.get(ColorRangeSensor.class, "Sensor_Left");
         rightSensor = hardwareMap.get(ColorRangeSensor.class, "Sensor_Right");
@@ -104,39 +85,23 @@ public class Outake extends SubsystemBase {
     public void periodic() {
         telemetry.addData("Loaded", "%-7s - %-7s", getLeftColor().name(), getRightColor().name());
 
-        if (useOldFlywheel) {
-            if (flywheel != null) {
-                setSpeed = speed * maxSpeed;
-                if (enableFlywheel)
-                    flywheel.setVelocity(setSpeed);
-                else
-                    flywheel.setVelocity(0);
+        if (fly != null) {
+            setSpeed = speed * maxSpeed;
+            if (enableFlywheel)
+                fly.setPower(
+                        pidf.calculate(fly.getVelocity(), setSpeed) * 12 / voltageSensor.getVoltage()
+                );
+            else
+                fly.setPower(0);
 
-                telemetry.addData("Outake velocity", "%f/%f (%f%%)",
-                        flywheel.getVelocity(),setSpeed,
-                        (flywheel.getVelocity() / setSpeed * 100)
-                        );
+//            telemetry.addData("Outake velocity", "%f/%f (%f%%)",
+//                    fly.getVelocity(), setSpeed,
+//                    (fly.getVelocity() / setSpeed * 100)
+//            );
 
-            }
-
-        } else {
-            if (fly != null) {
-                setSpeed = speed * maxSpeed;
-                if (enableFlywheel)
-                    fly.setPower(
-                            pidf.calculate(fly.getVelocity(), setSpeed) * 12 / voltageSensor.getVoltage()
-                    );
-                else
-                    fly.setPower(0);
-
-                telemetry.addData("Outake velocity", "%f/%f (%f%%)",
-                        fly.getVelocity(),setSpeed,
-                        (fly.getVelocity() / setSpeed * 100)
-                        );
-
-            }
         }
-        telemetry.addData("Speed", speed);
+
+//        telemetry.addData("Speed", speed);
     }
 
     public void StartOutake() {
@@ -181,24 +146,11 @@ public class Outake extends SubsystemBase {
     }
 
     public final Command waitUntilFast() {
-        if (waitToShoot) {
-            if (useOldFlywheel) {
-                return new ParallelRaceGroup(
-                        new WaitUntilCommand(() ->
-                                (flywheel.getVelocity() / setSpeed) > 0.90),
-                        new WaitCommand(1500)
-                );
-            }
-            else
-            {
-                return new ParallelRaceGroup(
-                        new WaitUntilCommand(() ->
-                                (fly.getVelocity() / setSpeed) > 0.90),
-                        new WaitCommand(1500)
-                );
-            }
-        }
-        else return new WaitCommand(1);
+        return new ParallelRaceGroup(
+                new WaitUntilCommand(() ->
+                        (fly.getVelocity() / setSpeed) > 0.90),
+                new WaitCommand(1500)
+        );
     }
 
     public CommandBase shootL() {
@@ -208,7 +160,6 @@ public class Outake extends SubsystemBase {
                 new WaitCommand(triggerDelay),
                 new InstantCommand(() -> SettriggerL(resetPosition))
         );
-
     }
 
     public CommandBase shootR() {
@@ -222,10 +173,15 @@ public class Outake extends SubsystemBase {
 
     public CommandBase shootBoth() {
         return new ParallelCommandGroup(
-                shootL(),
-                shootR()
+                waitUntilFast(),
+                new InstantCommand(() -> SettriggerL(triggerPosition)),
+                new InstantCommand(() -> SettriggerR(triggerPosition)),
+                new WaitCommand(triggerDelay),
+                new InstantCommand(() -> SettriggerL(resetPosition)),
+                new InstantCommand(() -> SettriggerR(resetPosition))
         );
     }
+
     public CommandBase shootLoaded() {
         return new ConditionalCommand(
                 shootL(),
@@ -237,7 +193,6 @@ public class Outake extends SubsystemBase {
                 () -> getLeftColor() != ArtifactColor.NOTHING
         );
     }
-
 
     public CommandBase shootPurple() {
         return new ConditionalCommand(

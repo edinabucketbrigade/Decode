@@ -7,7 +7,7 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.Robot;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.gamepad.ToggleButtonReader;
@@ -57,9 +57,6 @@ public class BlueTeleOp extends CommandOpMode {
 
         controller = new GamepadEx(gamepad1);
 
-
-        controller.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(robot.shootLeft());
-        controller.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(robot.shootRight());
         // LEFT_BUMPER controlls the start and stop of the outake
         controller.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .toggleWhenPressed(robot.enableIntake(), robot.disableIntake());
@@ -79,13 +76,17 @@ public class BlueTeleOp extends CommandOpMode {
         controller.getGamepadButton(GamepadKeys.Button.Y)
                 .whenPressed(robot.shootPattern());
 
+        controller.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
+                .whenPressed(robot.emptyIntake());
+        controller.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
+                .whenPressed(new InstantCommand(() -> follower.setPose(robot.apriltagPose)));
+
         slowMode = new ToggleButtonReader(
                 controller, GamepadKeys.Button.DPAD_DOWN
         );
         fixedOutake = new ToggleButtonReader(
                 controller, GamepadKeys.Button.DPAD_UP
         );
-
         turnToTarget = new ToggleButtonReader(
                 controller, GamepadKeys.Button.RIGHT_STICK_BUTTON
         );

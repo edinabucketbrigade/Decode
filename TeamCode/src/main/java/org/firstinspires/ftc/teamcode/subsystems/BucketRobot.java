@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -19,6 +20,7 @@ import com.seattlesolvers.solverslib.pedroCommand.TurnToCommand;
 import com.seattlesolvers.solverslib.util.InterpLUT;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.auto.AutoPoints;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
@@ -35,7 +37,7 @@ public class BucketRobot extends Robot {
 
     //store latest robot position in auto to use in tele
     public static Pose currentPos = null;
-    public boolean updatePos = false;
+    public Pose apriltagPose = new Pose();
 
     public boolean fixedSpeed = false;
     public static double farSpeed = 0.88;
@@ -56,9 +58,16 @@ public class BucketRobot extends Robot {
         public int getPattern() {
             return pattern;
         }
+
+        public static ARTIFACTPATTERN fromPattern(int id) {
+            for (ARTIFACTPATTERN p : values()) {
+                if (p.getPattern() == id) return p;
+            }
+            return NONE;
+        }
     }
 
-    static ARTIFACTPATTERN pattern = ARTIFACTPATTERN.NONE;
+    private ARTIFACTPATTERN pattern = ARTIFACTPATTERN.NONE;
 
     private final Telemetry telemetry;
     private final Follower follower;
@@ -74,29 +83,73 @@ public class BucketRobot extends Robot {
         CommandScheduler.getInstance().setBulkReading(hMap, LynxModule.BulkCachingMode.MANUAL);
         targetPos = BucketRobot.createPose(AutoPoints.targetPos);
 
-
         outake = new Outake(hMap, t);
         intake = new Intake(hMap, t);
-
         camera = new Camera(hMap, t);
         register(outake, intake, camera);
-
-        pattern = ARTIFACTPATTERN.NONE;
 
         // interpolated flywheel velocity lookuptable by distance
         lut = new InterpLUT();
 
 //Adding each val with a key
         lut.add(0, nearSpeed);
-        lut.add(51.7,.55);
-        lut.add(71,.625);
-        lut.add(102,.71);
-        lut.add(140,.86);
+        lut.add(51.7, .55);
+        lut.add(71, .625);
+        lut.add(102, .71);
+        lut.add(140, .86);
         lut.add(200, 1.0);
 
 //generating final equation
         lut.createLUT();
     }
+
+    @Override
+    public void run() {
+        currentPos = follower.getPose();
+        apriltagPose = currentPos;
+
+        // what's the angle from the robot to the target? taken from the facingPoint function in PP
+        double targetAngle = MathFunctions.normalizeAngle(Math.atan2(
+                targetPos.getY() - currentPos.getY(),
+                targetPos.getX() - currentPos.getX()));
+
+        telemetry.addData("Goal", "distance %f at %f degrees",
+                currentPos.distanceFrom(targetPos),
+                Math.toDegrees(targetAngle)
+        );
+        telemetry.addData("Pose", currentPos);
+
+        //adjust power to hit goal
+        if (fixedSpeed)
+            Outake.speed = midSpeed;
+        else {
+            double dist = currentPos.distanceFrom(targetPos);
+            Outake.speed = lut.get(dist);
+        }
+
+        if (turnToTarget)
+            new TurnToCommand(follower, targetAngle).schedule();
+
+        if (camera != null) {
+            for (AprilTagDetection detection : camera.currentDetections) {
+                if (pattern == ARTIFACTPATTERN.NONE)
+                    pattern = ARTIFACTPATTERN.fromPattern(detection.id);
+                if (detection.id == 20 || detection.id == 24) {
+                    apriltagPose = new Pose(detection.robotPose.getPosition().x,
+                            detection.robotPose.getPosition().y,
+                            detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS))
+                            .getAsCoordinateSystem(PedroCoordinates.INSTANCE);
+                }
+            }
+        }
+
+        telemetry.addData("Apriltag Pose", apriltagPose);
+        telemetry.addData("Pattern", pattern.name());
+
+        follower.update();
+        super.run();
+    }
+
 
     public Command enableIntake() {
         return new InstantCommand(intake::StartIntake);
@@ -104,6 +157,10 @@ public class BucketRobot extends Robot {
 
     public Command disableIntake() {
         return new InstantCommand(intake::StopIntake);
+    }
+
+    public Command emptyIntake() {
+        return new InstantCommand(intake::emptyIntake);
     }
 
     public Command enableOutake() {
@@ -193,81 +250,7 @@ public class BucketRobot extends Robot {
         );
     }
 
-
-    private void setFlywheelSpeed() {
-        if (fixedSpeed)
-            Outake.speed = midSpeed;
-        else {
-
-            double dist = currentPos.distanceFrom(targetPos);
-            Outake.speed = lut.get(dist);
-
-        }
-    }
-
-    @Override
-    public void run() {
-        currentPos = follower.getPose();
-
-        double targetAngle = MathFunctions.normalizeAngle(Math.atan2(
-                targetPos.getY() - currentPos.getY(),
-                targetPos.getX() - currentPos.getX()));
-
-        telemetry.addData("Pose", "<%f,%f>:%f",
-                currentPos.getX(),
-                currentPos.getY(),
-                Math.toDegrees(currentPos.getHeading())
-
-        );
-        telemetry.addData("Goal", "distance %f at %f degrees",
-                currentPos.distanceFrom(targetPos),
-                Math.toDegrees(targetAngle)
-        );
-
-        //adjust power to hit goal
-        setFlywheelSpeed();
-
-        if (camera != null) {
-            for (AprilTagDetection detection : camera.currentDetections) {
-                if (pattern == ARTIFACTPATTERN.NONE) {
-
-                    if (detection.id == ARTIFACTPATTERN.GPP.getPattern()) {
-                        pattern = ARTIFACTPATTERN.GPP;
-                        break;
-                    } else if (detection.id == ARTIFACTPATTERN.PGP.getPattern()) {
-                        pattern = ARTIFACTPATTERN.PGP;
-                        break;
-                    } else if (detection.id == ARTIFACTPATTERN.PPG.getPattern()) {
-                        pattern = ARTIFACTPATTERN.PPG;
-                        break;
-                    }
-                }
-                /*if (updatePos) {
-                    if (detection.id == 20 || detection.id == 24) {
-                        Pose p = new Pose(detection.robotPose.getPosition().x,
-                                detection.robotPose.getPosition().y,
-                                detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS))
-                                .getAsCoordinateSystem(PedroCoordinates.INSTANCE);
-                        follower.setPose(p);
-                    }
-                }*/
-
-
-            }
-        }
-
-        if (turnToTarget)
-            new TurnToCommand(follower, targetAngle).schedule();
-
-        telemetry.addData("Pattern",
-                pattern.name()
-        );
-
-        follower.update();
-        super.run();
-    }
-
-
+    //make switching paths for alliances easy
     public static Pose createPose(double x, double y, double heading) {
         if (blueAlliance)
             return new Pose(x, y, heading);

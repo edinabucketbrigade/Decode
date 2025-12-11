@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
@@ -10,7 +9,6 @@ import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 import com.seattlesolvers.solverslib.util.Timing;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.concurrent.TimeUnit;
 
@@ -45,7 +43,7 @@ public class Intake extends SubsystemBase {
         transport.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         transport.setRunMode(Motor.RunMode.RawPower);
 
-        //transportSensor = hardwareMap.get(ColorRangeSensor.class, "Sensor_Transport");
+        transportSensor = hardwareMap.get(ColorRangeSensor.class, "Sensor_Transport");
         //intakeSensor = hardwareMap.get(ColorRangeSensor.class, "Sensor_Intake");
 
     }
@@ -109,7 +107,7 @@ public class Intake extends SubsystemBase {
             intake.set(enableIntake ? maxSpeed : 0);
         }
         //if transport is enabled set to maxSpeed. Else stop transport
-        transport.set(enableTransport? maxSpeed : 0);
+        transport.set(enableTransport || isTransportFull()? maxSpeed : 0);
     }
 
     public boolean isStalled() {
