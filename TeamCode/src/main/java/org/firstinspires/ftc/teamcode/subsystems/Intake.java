@@ -27,11 +27,11 @@ public class Intake extends SubsystemBase {
     private Timing.Timer reverseTime = null;
 
     private boolean enableIntake = false;
-    private boolean reverseIntake = false;
+    public boolean reverseIntake = false;
     private boolean enableTransport = false;
 
 
-    public Intake(HardwareMap hardwareMap, Telemetry t){
+    public Intake(HardwareMap hardwareMap, Telemetry t) {
         telemetry = t;
 
         intake = new MotorEx(hardwareMap, "flywheel_intake", Motor.GoBILDA.RPM_1150);
@@ -50,22 +50,24 @@ public class Intake extends SubsystemBase {
 
     public boolean isTransportFull() {
         if (transportSensor == null) return false;
-        return Outake.getArtifactColor(transportSensor,20.0) != Outake.ArtifactColor.NOTHING;
+        return Outake.getArtifactColor(transportSensor, 20.0) != Outake.ArtifactColor.NOTHING;
     }
+
     public boolean isIntakeFull() {
         if (intakeSensor == null) return false;
-        return Outake.getArtifactColor(intakeSensor,20.0) != Outake.ArtifactColor.NOTHING;
+        return Outake.getArtifactColor(intakeSensor, 20.0) != Outake.ArtifactColor.NOTHING;
     }
 
     public void setReverseIntake(boolean set) {
         reverseIntake = set;
     }
 
-    public void startIntakeWheel()
-    {
+    public void startIntakeWheel() {
         enableIntake = true;
         intakeTime = new Timing.Timer(100, TimeUnit.MILLISECONDS);
+        intakeTime.start();
     }
+
     public void startTransport() {
         enableTransport = true;
     }
@@ -77,11 +79,13 @@ public class Intake extends SubsystemBase {
 
     public void stopIntakeWheel() {
         enableIntake = false;
-        intakeTime= null;
+        intakeTime = null;
     }
+
     public void stopTransport() {
         enableTransport = false;
     }
+
     public void StopIntake() {
         stopIntakeWheel();
         stopTransport();
@@ -89,8 +93,9 @@ public class Intake extends SubsystemBase {
 
     public void emptyIntake() {
         if (!reverseIntake) {
-            reverseTime = new Timing.Timer(500, TimeUnit.MILLISECONDS);
-            setReverseIntake(true);
+            //reverseTime = new Timing.Timer(500, TimeUnit.MILLISECONDS);
+            //reverseTime.start();
+            reverseIntake = true;
         }
     }
 
@@ -99,20 +104,25 @@ public class Intake extends SubsystemBase {
 
         if (reverseIntake) {
             intake.set(-1.0);
-            if (reverseTime.done()) setReverseIntake(false);
-        } else if (isStalled()) {
-            emptyIntake();
+            //telemetry.addData("reversetime", reverseTime.remainingTime());
+            //if (reverseTime.done()) {reverseIntake = false;}
+            //} else if (isStalled()) {
+            //    emptyIntake();
         } else {
             //if intake is enabled set to maxSpeed. Else stop intake
             intake.set(enableIntake ? maxSpeed : 0);
         }
         //if transport is enabled set to maxSpeed. Else stop transport
-        transport.set(enableTransport || isTransportFull()? maxSpeed : 0);
+        transport.set(enableTransport || isTransportFull() ? maxSpeed : 0);
     }
 
     public boolean isStalled() {
+        return false;
+    }
+}
+/*
         return enableIntake &&
                 intakeTime != null && intakeTime.done() &&
                 intake.getVelocity()<10;
     }
-}
+*/

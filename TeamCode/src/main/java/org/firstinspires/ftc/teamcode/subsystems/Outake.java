@@ -44,7 +44,7 @@ public class Outake extends SubsystemBase {
 
     public static double resetPosition = 0.4;
     public static double triggerPosition = .9;
-    public static long triggerDelay = 150;
+    public static long triggerDelay = 100;
     private double setSpeed = 0;
 
     private boolean enableFlywheel = false;

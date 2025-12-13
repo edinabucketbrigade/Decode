@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
@@ -134,16 +135,21 @@ public class BucketRobot extends Robot {
             for (AprilTagDetection detection : camera.currentDetections) {
                 if (pattern == ARTIFACTPATTERN.NONE)
                     pattern = ARTIFACTPATTERN.fromPattern(detection.id);
-                if (detection.id == 20 || detection.id == 24) {
+                /*if (detection.id == 20 || detection.id == 24) {
                     apriltagPose = new Pose(detection.robotPose.getPosition().x,
                             detection.robotPose.getPosition().y,
-                            detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS))
-                            .getAsCoordinateSystem(PedroCoordinates.INSTANCE);
+                            detection.robotPose.getOrientation().getYaw(AngleUnit.RADIANS),
+                            FTCCoordinates.INSTANCE)
+                            .getAsCoordinateSystem(PedroCoordinates.INSTANCE)
+                    ;
                 }
+
+                 */
+
             }
         }
 
-        telemetry.addData("Apriltag Pose", apriltagPose);
+        //telemetry.addData("Apriltag Pose", apriltagPose);
         telemetry.addData("Pattern", pattern.name());
 
         follower.update();
@@ -193,6 +199,10 @@ public class BucketRobot extends Robot {
 
     public Command shootBoth() {
         return outake.shootBoth();
+    }
+    public void emptyIntake (boolean b)
+    {
+        intake.reverseIntake = b;
     }
 
     private Command shootGPP() {
