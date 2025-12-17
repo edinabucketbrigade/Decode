@@ -44,7 +44,7 @@ public class Outake extends SubsystemBase {
 
     public static double resetPosition = 0.4;
     public static double triggerPosition = .9;
-    public static long triggerDelay = 100;
+    public static long triggerDelay = 75;
     private double setSpeed = 0;
 
     private boolean enableFlywheel = false;
@@ -94,10 +94,10 @@ public class Outake extends SubsystemBase {
             else
                 fly.setPower(0);
 
-//            telemetry.addData("Outake velocity", "%f/%f (%f%%)",
-//                    fly.getVelocity(), setSpeed,
-//                    (fly.getVelocity() / setSpeed * 100)
-//            );
+            telemetry.addData("Outake velocity", "%f/%f (%f%%)",
+                    fly.getVelocity(), setSpeed,
+                    (fly.getVelocity() / setSpeed * 100)
+            );
 
         }
 

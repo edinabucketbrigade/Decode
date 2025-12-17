@@ -113,7 +113,7 @@ public class Intake extends SubsystemBase {
             intake.set(enableIntake ? maxSpeed : 0);
         }
         //if transport is enabled set to maxSpeed. Else stop transport
-        transport.set(enableTransport || isTransportFull() ? maxSpeed : 0);
+        transport.set(enableTransport || isTransportFull() ? maxSpeed/2 : 0);
     }
 
     public boolean isStalled() {

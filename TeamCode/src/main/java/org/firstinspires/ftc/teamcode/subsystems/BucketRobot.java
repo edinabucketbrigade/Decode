@@ -95,8 +95,8 @@ public class BucketRobot extends Robot {
 //Adding each val with a key
         lut.add(0, nearSpeed);
         lut.add(51.7, .55);
-        lut.add(71, .625);
-        lut.add(102, .71);
+        lut.add(71, .67);
+        lut.add(102, .72);
         lut.add(140, .86);
         lut.add(200, 1.0);
 
@@ -200,8 +200,8 @@ public class BucketRobot extends Robot {
     public Command shootBoth() {
         return outake.shootBoth();
     }
-    public void emptyIntake (boolean b)
-    {
+
+    public void emptyIntake(boolean b) {
         intake.reverseIntake = b;
     }
 
@@ -211,9 +211,11 @@ public class BucketRobot extends Robot {
                 shootPurple(),
                 new ParallelRaceGroup(
                         new WaitUntilCommand(outake::isLoaded),
-                        new WaitCommand(2000)
+                        new WaitCommand(5000)
                 ),
-                shootBoth()
+                shootLoaded(),
+                shootLoaded(),
+                shootLoaded()
         );
     }
 
@@ -223,9 +225,11 @@ public class BucketRobot extends Robot {
                 shootGreen(),
                 new ParallelRaceGroup(
                         new WaitUntilCommand(outake::isLoaded),
-                        new WaitCommand(2000)
+                        new WaitCommand(5000)
                 ),
-                shootBoth()
+                shootLoaded(),
+                shootLoaded(),
+                shootLoaded()
         );
     }
 
@@ -235,9 +239,11 @@ public class BucketRobot extends Robot {
                 shootPurple(),
                 new ParallelRaceGroup(
                         new WaitUntilCommand(outake::isLoaded),
-                        new WaitCommand(2000)
+                        new WaitCommand(5000)
                 ),
-                shootBoth()
+                shootLoaded(),
+                shootLoaded(),
+                shootLoaded()
         );
     }
 
